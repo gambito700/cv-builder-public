@@ -39,7 +39,11 @@ servidor. Ese es el motivo por el que el generador de PDF no agrega peticiones
 a terceros: no es que haya fuentes autoalojadas, es que la única dependencia
 pesada está en el repo. Al momento de generar el PDF no se descarga nada.
 
-La descarga `.tex` funciona igual: se genera en el navegador y se descarga.
+La descarga `.tex` se genera en el navegador y se descarga igual que el PDF, sin
+salir de tu dispositivo. Ojo con lo que sale: el motor `.tex` está en
+reescritura y hoy **no compila limpiamente con el formulario vacío**, así que el
+archivo que baja no es confiable todavía. Ver **Proximamente** en el
+[README](README.md). La privacidad en sí no cambia: nada sale de tu dispositivo.
 
 ## La unica peticion a un tercero
 
@@ -64,6 +68,33 @@ defecto del sistema.
 
 El resto de los recursos (CSS, JS, el logo, las imagenes de ejemplo del
 carrusel) vienen del mismo repo.
+
+## Creditos de terceros
+
+La app no tiene backend, pero sí tiene dependencias de terceros. El detalle
+completo, con licencias y titulares, está en la sección **Creditos y licencias
+de terceros** del [README](README.md). Acá va lo que importa desde el punto de
+vista de la privacidad:
+
+- **jsPDF 4.2.1 (MIT)**: la librería está vendorizada en
+  `vendor/jspdf.umd.min.js` y se sirve desde el propio repo, con ruta relativa. No
+  se pide a ningún CDN.
+- **Kalam y Patrick Hand (SIL Open Font License)** se piden a Google Fonts. Son
+  la única petición externa de la app, y por lo único que se filtra tu IP a un
+  tercero en el momento de cargar la página.
+- **Las 5 fotos del carrusel** son material de terceros, servido desde el propio
+  repo. 4 de las 5 acreditan a `Ludmila Nilava` como autora en sus metadatos
+  XMP; `04-logros.jpg` no conserva metadatos, así que su procedencia queda como
+  **procedencia por confirmar**. No se afirma plataforma ni licencia específica
+  porque el `dc:rights` de los archivos dice `DREAMWOOD`, que no identifica
+  ninguna.
+
+Los nombres de esos terceros —los autores de jsPDF que aparecen en el header de
+su licencia, la fotógrafa del carrusel— **no son datos personales de quien
+mantiene el proyecto**. Son atribución de fuente: la MIT y la OFL exigen que
+esos avisos se conserven, y que estén en el repo es deliberado y conforme a
+licencia. No son tuyos ni se refieren a ti, y no dicen nada sobre quién usa la
+app.
 
 ## La app arranca en blanco
 
@@ -90,13 +121,19 @@ documenta acá para que nadie la lea como un descuido.
 - El repositorio es open source y está firmado como `gambito700` en el
   `LICENSE` (MIT). Esa firma es pública y forma parte de la licencia.
 - La app incluye enlaces visibles al perfil de GitHub y al portafolio del
-  proyecto, como valores por defecto de los campos **GitHub** y **Portafolio**
-  del paso 1. Los puedes editar o borrar como cualquier otro campo.
+  proyecto en el **pie de página** de la portada (`index.html`). No son datos
+  precargados: los campos **GitHub** y **Portafolio** del paso 1 nacen vacíos,
+  igual que todos los demás, y se llenan a mano si quieres.
 
 **Esto no es un dato personal.** No se incluye el nombre, ni el RUT, ni el
 email, ni el teléfono, ni la dirección de ninguna persona, ni real ni ficticia.
 Lo único que se publica es la identidad pública del proyecto en Internet: el
 usuario de GitHub y el sitio donde vive. Todo lo demás nace vacío.
+
+Y para que no se confunda: los nombres de terceros que aparecen en el repositorio
+—los titulares de copyright del header de jsPDF, la fotógrafa de las imágenes
+del carrusel— tampoco son datos personales del propietario. Son atribución de
+fuente que las licencias obligan a conservar. Ver **Creditos de terceros**.
 
 ## Tus datos viven en tu navegador
 

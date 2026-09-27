@@ -41,6 +41,11 @@ const DEFAULT_DATA = {
     idiomas: []
   },
 
+  // Fortalezas: texto libre que escribe la persona, un item por entrada. Arranca
+  // vacio a proposito, como todo lo demas: el generador LaTeX dibuja la seccion
+  // solo si hay algo que dibujar y nunca la rellena por su cuenta.
+  fortalezas: [],
+
   certifications: [],
 
   projects: [],

@@ -378,17 +378,32 @@ function getPerfil(data, area) {
 
 /**
  * Obtener habilidades relevantes segun area
+ *
+ * REGLA: aqui solo entran habilidades que la persona escribio. Este archivo se
+ * sirve al navegador y la app arranca en blanco a proposito, asi que una
+ * habilidad escrita a mano en el generador aparece impresa en el CV de alguien
+ * que no escribio nada. Por eso el mapa SOLO tiene banderas que leen grupos
+ * reales de data.skills.
+ *
+ * Este mapa NO tiene banderas 'kitchen' ni 'service': las usaban para inyectar
+ * cuatro habilidades de cocina y cuatro de atencion al cliente. Los grupos que
+ * esas banderas pretendian leer no existen en DEFAULT_DATA.skills (frontend,
+ * backend, devops, seguridad, marketing, idiomas) ni en el wizard de
+ * renderSkills, asi que nadie podia escribirlas: el bloque solo servia para
+ * inventar contenido. Las areas sin ningun grupo real (cocina, atencion,
+ * ventas, corretaje) devuelven ahora solo los idiomas, que si son datos del
+ * usuario.
  */
 function getSkillsByArea(data, area) {
   const relevance = {
-    cocina: { kitchen: true, service: true, tech: false, security: false, marketing: false },
-    atencion: { kitchen: false, service: true, tech: false, security: false, marketing: false },
-    seguridad: { kitchen: false, service: false, tech: false, security: true, marketing: false },
-    ventas: { kitchen: false, service: true, tech: false, security: false, marketing: false },
-    informatica: { kitchen: false, service: false, tech: true, security: false, marketing: true },
-    corretaje: { kitchen: false, service: true, tech: false, security: false, marketing: false },
-    marketing: { kitchen: false, service: false, tech: true, security: false, marketing: true },
-    integral: { kitchen: true, service: true, tech: true, security: true, marketing: true }
+    cocina: { tech: false, security: false, marketing: false },
+    atencion: { tech: false, security: false, marketing: false },
+    seguridad: { tech: false, security: true, marketing: false },
+    ventas: { tech: false, security: false, marketing: false },
+    informatica: { tech: true, security: false, marketing: true },
+    corretaje: { tech: false, security: false, marketing: false },
+    marketing: { tech: true, security: false, marketing: true },
+    integral: { tech: true, security: true, marketing: true }
   };
 
   const rel = relevance[area] || relevance.integral;
@@ -404,12 +419,6 @@ function getSkillsByArea(data, area) {
   }
   if (rel.marketing) {
     skills.push(...(data.skills.marketing || []));
-  }
-  if (rel.kitchen) {
-    skills.push('Mise en place', 'Manipulación de alimentos', 'Cocina caliente/fría', 'Control de inventarios');
-  }
-  if (rel.service) {
-    skills.push('Atención al cliente', 'Manejo de caja', 'Servicio en mesa', 'Comunicación efectiva');
   }
 
   // Idiomas siempre
@@ -593,6 +602,13 @@ ${perfilBlock}
 
 /* ============================================================
    TEMPLATE 2: CREATIVO
+   Portado desde el servicio de compilacion: los iconos de
+   fuente de iconos y las curvas con adornos del encabezado y
+   del pie se quitaron para que pdflatex de Render no tenga que
+   cargar ninguna fuente extra. Los iconos se reemplazan por
+   texto en negrita dentro del titulo de cada caja, y las bandas
+   de encabezado y pie son rectangulos planos hechos con \fill.
+   Ver el detalle de por que en js/latex-service.js.
    ============================================================ */
 function generateCreativo(data) {
   const p = data.personal;
@@ -606,7 +622,7 @@ function generateCreativo(data) {
   // nada adentro. Se omite el bloque entero, con su vspace.
   const perfilBlock = perfil ? `
 %% --- PERFIL ---
-\\begin{coloredbox}[title={\\faIcon{user}\\ Perfil Profesional}]
+\\begin{coloredbox}[title={Perfil Profesional}]
   ${esc(perfil)}
 \\end{coloredbox}
 
@@ -656,7 +672,8 @@ function generateCreativo(data) {
 %%
 %% COMPILACIÓN: pdflatex cv.tex (ejecutar 2 veces)
 %% REQUISITOS: pdflatex, paquetes: geometry, xcolor, tcolorbox,
-%%   tikz, fontawesome5, enumitem, hyperref, lmodern
+%%   tikz, enumitem, hyperref, lmodern
+%% (sin fontawesome5 — compatible con Render free tier)
 %% ============================================================
 \\documentclass[10pt]{article}
 
@@ -670,8 +687,6 @@ function generateCreativo(data) {
 \\usepackage{tcolorbox}
 \\tcbuselibrary{skins,breakable}
 \\usepackage{tikz}
-\\usetikzlibrary{calc,decorations.pathmorphing}
-\\usepackage{fontawesome5}
 \\usepackage{enumitem}
 \\usepackage{hyperref}
 \\usepackage{parskip}
@@ -707,12 +722,12 @@ function generateCreativo(data) {
 
 \\begin{document}
 
-%% --- ENCABEZADO DECORATIVO ---
+%% --- ENCABEZADO: banda de color plana (rectangulos con \fill) ---
 \\begin{tikzpicture}[remember picture, overlay]
-  \\fill[primary!10] (current page.north west) rectangle
-    ([yshift=-35mm]current page.north east);
-  \\draw[decorate, decoration=snake, primary, thick]
-    ([yshift=-35mm]current page.north west) -- ([yshift=-35mm]current page.north east);
+  \\fill[primary!12] (current page.north west) rectangle
+    ([yshift=-34mm]current page.north east);
+  \\fill[primary] ([yshift=-34mm]current page.north west) rectangle
+    ([yshift=-36mm]current page.north east);
 \\end{tikzpicture}
 
 \\begin{center}
@@ -733,20 +748,20 @@ function generateCreativo(data) {
 \\vspace{8pt}
 ${perfilBlock}
 %% --- HABILIDADES ---
-\\begin{coloredbox}[title={\\faIcon{cogs}\\ Habilidades}]
+\\begin{coloredbox}[title={Habilidades}]
   ${skillsBlock}
 \\end{coloredbox}
 
 \\vspace{6pt}
 
 %% --- EXPERIENCIA ---
-{\\large\\bfseries\\color{primary} \\faIcon{briefcase}\\ Experiencia Laboral}
+{\\large\\bfseries\\color{primary} Experiencia Laboral}
 \\vspace{4pt}
 
 ${expBlock}
 
 %% --- EDUCACIÓN ---
-{\\large\\bfseries\\color{primary} \\faIcon{graduation-cap}\\ Formación y Certificaciones}
+{\\large\\bfseries\\color{primary} Formación y Certificaciones}
 \\vspace{4pt}
 
 \\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
@@ -755,10 +770,10 @@ ${expBlock}
 
 \\vfill
 
-%% --- PIE DECORATIVO ---
+%% --- PIE: línea de color plana ---
 \\begin{tikzpicture}[remember picture, overlay]
-  \\draw[decorate, decoration=snake, accent, thick]
-    ([yshift=15mm]current page.south west) -- ([yshift=15mm]current page.south east);
+  \\fill[accent] ([yshift=12mm]current page.south west) rectangle
+    ([yshift=14mm]current page.south east);
 \\end{tikzpicture}
 
 \\begin{center}
@@ -819,6 +834,32 @@ ${esc(perfil)}
   for (const [cat, items] of Object.entries(skillGroups)) {
     skillRows += `  \\textbf{${catNames[cat] || cat}:} & ${items.map(esc).join(', ')} \\\\\n`;
   }
+
+  // Fortalezas: solo lo que escribio la persona. Antes este bloque era texto
+  // fijo (Autodidacta, Aprendizaje rapido, Disponibilidad inmediata, Trabajo en
+  // equipo, Responsabilidad) y salia impreso aunque nadie hubiera escrito nada.
+  // Se filtra lo vacio y lo que no sea texto para que un item en blanco no
+  // produzca un \textbf{} huerfano.
+  const fortalezas = (data.fortalezas || [])
+    .map(f => (typeof f === 'string' ? f : '').trim())
+    .filter(Boolean);
+
+  let fortalezasRows = '';
+  for (const f of fortalezas) {
+    fortalezasRows += `  \\item \\textbf{${esc(f)}}\n`;
+  }
+
+  // Sin fortalezas no se emite el \section: quedaria "Fortalezas" con su
+  // \titlerule dibujados sobre un cuerpo vacio. Se omite el bloque entero, con
+  // su vspace, igual que el perfilBlock de arriba.
+  const fortalezasBlock = fortalezas.length > 0 ? `
+%% --- FORTALEZAS ---
+\\section{Fortalezas}
+\\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+${fortalezasRows}\\end{itemize}
+
+\\vspace{6pt}
+` : '';
 
   return `%% ============================================================
 %% CV -- ${esc(p.nombre)} -- Plantilla Profesional Clásica
@@ -889,15 +930,7 @@ ${expRows}\\end{tabularx}
 \\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
   ${eduRows}
 \\end{itemize}
-
-%% --- FORTALEZAS ---
-\\section{Fortalezas}
-\\textbf{Autodidacta} y orientado a resultados \\quad--\\quad
-\\textbf{Aprendizaje rápido} \\quad--\\quad
-\\textbf{Disponibilidad inmediata} y turnos rotativos \\quad--\\quad
-\\textbf{Trabajo en equipo} y bajo presión \\quad--\\quad
-\\textbf{Responsabilidad} y puntualidad
-
+${fortalezasBlock}
 \\vfill
 
 \\begin{center}

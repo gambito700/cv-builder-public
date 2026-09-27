@@ -43,7 +43,7 @@ const TUTORIALES = {
     pasos: [
       {
         target: '#acciones-0',
-        title: 'Los 4 botones de cada opción',
+        title: 'Los 5 botones de cada opción',
         hint: 'Para ver y para llevarte',
         text: 'Ver Código LaTeX abre el archivo .tex que genera este diseño, para que veas cómo está armado. Copiar Código se lo lleva al portapapeles, listo para pegar en Overleaf, en Word o donde quieras.',
         action: 'Entendido',
@@ -53,7 +53,7 @@ const TUTORIALES = {
         target: '#btn-pdf-0',
         title: 'Y los dos de descarga',
         hint: 'Para llevártelo',
-        text: 'Descargar .tex te guarda el código fuente para compilarlo donde tú quieras. Descargar PDF te arma el PDF al instante, sin instalar nada, y lo baja como cv-plantilla-N.pdf: sin tu nombre ni ningún dato tuyo en el nombre del archivo. Las 3 opciones traen los mismos 4 botones: lo único que cambia es el diseño (y si el diseño es compatible con ATS o no, que está escrito bajo cada botón).',
+        text: 'Descargar .tex te guarda el código fuente para compilarlo donde tú quieras. Descargar PDF te arma el PDF al instante, sin instalar nada, y lo baja como cv-plantilla-N.pdf: sin tu nombre ni ningún dato tuyo en el nombre del archivo. PDF del servidor es el quinto: manda tu .tex a un servidor y te devuelve el PDF compilado con LaTeX, que puede tardar si el servidor está despertando. Las 3 opciones traen los mismos 5 botones: lo único que cambia es el diseño (y si el diseño es compatible con ATS o no, que está escrito bajo cada botón).',
         action: 'Listo',
         avanzaConClic: false
       }

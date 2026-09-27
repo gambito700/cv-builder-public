@@ -210,11 +210,23 @@ class WizardController {
   }
 
   /**
-   * Guardar habilidades y certificaciones desde el DOM
+   * Guardar habilidades, certificaciones, fortalezas y proyectos desde el DOM
    */
   saveSkillsAndCertifications() {
     // Habilidades - ya se guardan en tiempo real via eventos
     // pero hacemos un save final aqui tambien
+
+    // Fortalezas - mismo caso que las habilidades: se guardan al agregarlas.
+    // Se releen los tags del DOM para quedar en la misma situacion que
+    // certificaciones y proyectos. El valor sale de data-valor, no del
+    // textContent del tag: leer el texto borraria de mas si la fortaleza
+    // contiene una "X".
+    const fortalezaTags = document.querySelectorAll('.fortaleza-tag');
+    this.data.fortalezas = [];
+    fortalezaTags.forEach(tag => {
+      const value = (tag.dataset.valor || '').trim();
+      if (value) this.data.fortalezas.push(value);
+    });
 
     // Certificaciones
     const certEntries = document.querySelectorAll('.cert-entry');

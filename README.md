@@ -9,10 +9,42 @@ en GitHub Pages se publica al activar Pages, en
 `https://gambito700.github.io/cv-builder-public/`; hasta entonces, el
 repositorio es la referencia.
 
+## Activar GitHub Pages
+
+Este es el **paso 1 pendiente** del proyecto: mientras Pages no este activo, el
+repo es la referencia y la URL publica responde 404. Son 5 pasos.
+
+1. En el repo: **Settings -> Pages**.
+2. En **Build and deployment**, pon **Source: "Deploy from a branch"**.
+3. **Branch: `main`**, **folder: `/ (root)`**. **Save**.
+4. Espera 1 a 2 minutos. La URL es
+   `https://gambito700.github.io/cv-builder-public/`.
+5. Verifica: la pagina carga, el pie de pagina con los 2 enlaces (portafolio y
+   repo) funciona, y el selector de telefono con banderas funciona.
+
+Lo que conviene saber antes de apretar Save:
+
+- El sitio es **estatico puro**. No hay paso de build, no hay `npm install`, no
+  hay `package.json` y no hay nada que configurar en la seccion de build: Pages
+  sirve lo que hay en la raiz del repo, tal cual.
+- **HTTPS es automatico.** GitHub Pages emite el certificado solo; no hay que
+  pedirlo ni configurarlo.
+- **`vendor/` tiene que estar commiteado.** El boton de PDF carga
+  `vendor/jspdf.umd.min.js` con ruta relativa. Si ese archivo no viaja en el
+  commit, el boton de PDF se rompe. Ya esta commiteado y `.gitignore` no lo
+  toca, pero el aviso queda: si alguien agrega `vendor/` al `.gitignore`, la app
+  se publica sin su motor de PDF y el fallo aparece en el navegador, no en la
+  configuracion.
+- Cada `push` **reconstruye**: no es instantaneo. Dale cerca de 1 minuto y
+  despues haz **hard-refresh** (Ctrl+Shift+R), porque el cache del navegador y
+  el del CDN de GitHub te pueden seguir sirviendo la version anterior.
+- El limite de GitHub Pages es **1 GB por sitio**. El repo va en ~2 MB, tres
+  ordenes de magnitud por debajo. No es un problema aca ni lo va a ser.
+
 ## Qué hace
 
 - 6 pasos guiados para armar tu CV
-- 3 plantillas descargables en `.tex`
+- 3 plantillas descargables en `.tex` (en reescritura, ver Proximamente)
 - Las mismas 3 plantillas descargables en **PDF**, con texto real
 - 1 de las 3 es ATS-safe; las otras 2 son diseño visual
 - Sin cuenta, sin base de datos, sin cookies
@@ -37,6 +69,10 @@ no son el mismo numero. El mapa esta en `js/results.js`
 | 2 | Profesional Clásico | 2 | **Sí** | Sí |
 
 Las 3 generan PDF. La 2 es la unica ATS-safe.
+
+La columna `.tex` esta en reescritura: los botones siguen visibles, pero la
+salida del motor actual no compila limpio con el formulario vacio, asi que no
+es una funcionalidad lista. Ver **Proximamente**.
 
 Lo que marca la diferencia no es el motor, que es el mismo para las tres, sino
 el **diseno**:
@@ -174,11 +210,8 @@ python -m http.server 8080
 ## Publicar en GitHub Pages
 
 El repo se sirve desde la raiz, asi que basta activar Pages con
-**branch `main`, folder `/ (root)`**. URL resultante cuando se active:
-
-```
-https://gambito700.github.io/cv-builder-public/
-```
+**branch `main`, folder `/ (root)`**. El paso a paso completo esta arriba, en
+**Activar GitHub Pages**.
 
 Esa URL todavía no está activa: Pages hay que habilitarlo a mano desde la
 configuración del repositorio.
@@ -251,9 +284,35 @@ js/tutorial.js
 |---|---|
 | PDF de las 3 plantillas | Funciona |
 | PDF ATS (plantilla 2, id `2`) | Funciona |
-| Descarga `.tex` de las 3 | Funciona |
+| Descarga `.tex` de las 3 | En reescritura |
+| Vista de codigo LaTeX | En reescritura |
 | 15 checks en FALLA del banco de pruebas | Abierto |
 | Revision visual del PDF renderizado | Pendiente |
+| GitHub Pages | Pendiente de activar (ver arriba) |
+
+## Proximamente
+
+La **exportacion `.tex` y la vista de codigo LaTeX se estan reescribiendo**.
+Se documentan como pendiente a proposito: los botones `.tex` siguen en pantalla
+y el `.tex` se sigue descargando, pero la salida actual no es confiable.
+
+La decision tecnica **ya esta tomada**:
+
+- Se usara un **fork modificado de
+  [latex-on-http](https://github.com/YtoTech/latex-on-http)**, desplegado en
+  **Render**, invocado mediante una llamada API desde la pagina estatica.
+- El motor actual genera el `.tex` **en el navegador**. Es exactamente lo que se
+  va a reemplazar.
+
+**Deuda conocida, y documentada a proposito:** el LaTeX que produce el motor
+actual **no compila limpiamente cuando el formulario esta vacio**. Queda un `\\`
+colgando tras los campos de contacto vacios, y hay un `itemize` al que no se le
+puede meter ningun `\\item`. Es un defecto conocido y **deliberadamente no se
+arreglo en este ciclo**, porque el motor se va a reemplazar: arreglar algo que
+se descarta es trabajo tirado.
+
+Por eso el `.tex` que sale hoy no debe tomarse como entregable. El PDF, en
+cambio, no depende de LaTeX y sigue siendo la via soportada.
 
 ## Licencia
 
@@ -262,25 +321,101 @@ MIT. Ver [LICENSE](LICENSE).
 Este generador no guarda, envia ni perfila nada. Si pierdes tus datos, no hay
 copia en ningun lado. Eso es parte del trato.
 
-### Imagenes de ejemplo
+## Creditos y licencias de terceros
 
-Las 5 imagenes de `assets/examples/` que usa el carrusel son fotografias de
-**Ludmila Nilava**, publicadas en **Pexels**, bajo la
-[licencia Pexels](https://www.pexels.com/license/).
+La app no tiene backend, pero si tiene dependencias de terceros. Esta es la
+lista completa, con la licencia de cada una y de donde se sirve.
 
-La licencia Pexels no exige atribucion. El credito va aqui por cortesia.
+### jsPDF 4.2.1 (MIT) - vendorizado, sin CDN
 
-Las 5 fueron recortadas y reescaladas a `1200x627` para el carrusel.
-
-| Archivo | Autor en los metadatos |
+| | |
 |---|---|
-| `01-sobrio.jpg` | Ludmila Nilava (`dc:creator`) |
-| `02-una-pagina.jpg` | Ludmila Nilava (`dc:creator`) |
-| `03-secciones.jpg` | Ludmila Nilava (`dc:creator`) |
-| `04-logros.jpg` | **Sin metadatos de autor** |
-| `05-a-mano.jpg` | Ludmila Nilava (`dc:creator`) |
+| Que | El motor que escribe el PDF en el navegador |
+| Version | 4.2.1 (compilado el 2026-03-17) |
+| Licencia | MIT |
+| Donde vive | `vendor/jspdf.umd.min.js`, 420.165 bytes (410.3 KiB) |
+| De donde se sirve | Del propio repo, con ruta relativa. **No hay CDN**: no se pide nada a cdnjs ni a ningun otro host |
+| Proyecto | <https://github.com/parallax/jsPDF> |
 
-**Aclaracion:** `04-logros.jpg` no conserva los metadatos de autor dentro del
-archivo, porque se le borraron los tags al procesarla. Su origen exacto no pudo
-verificarse desde el repo. Se le atribuye la misma autoria por compartir origen
-con las otras 4, pero eso es una inferencia, no un dato que el archivo respalde.
+El header de licencia se conserva **intacto**, porque la MIT exige que el aviso
+de copyright y el texto de la licencia viajen con todas las copias o partes
+sustanciales. Por eso `.gitattributes` declara `vendor/*.js -text`: para que Git
+no le toque un byte al archivo.
+
+Los titulares de copyright que aparecen en ese header son:
+
+> 2010-2025 James Hall (`james@parall.ax`), 2015-2025 yWorks GmbH, 2015-2025
+> Lukas Holländer, 2016-2018 Aras Abbasi, 2010 Aaron Spike, 2012 Willow Systems
+> Corporation, 2012 Pablo Hess, 2012 Florian Jenett, 2013 Warren Weckesser, 2013
+> Youssef Beddad, 2013 Lee Driscoll, 2013 Stefan Slonevskiy, 2013 Jeremy Morel,
+> 2013 Christoph Hartmann, 2014 Juan Pablo Gaviria, 2014 James Makes, 2014 Diego
+> Casorran, 2014 Steven Spungin, 2014 Kenneth Glassey.
+
+Son 19, con sus emails y sus URLs en el header del archivo. Se listan aqui
+completos para que el aviso de atribucion sea legible sin abrir el `.js`.
+
+### Google Fonts: Kalam (400, 700) y Patrick Hand (SIL Open Font License)
+
+| | |
+|---|---|
+| Que | Las tipografias web de la pagina |
+| Licencia | SIL Open Font License |
+| Donde se piden | `index.html` L10 (`preconnect`) y L12 (hoja de estilos) |
+| De donde | `https://fonts.googleapis.com` (el CSS) y `https://fonts.gstatic.com` (los `.woff2`) |
+| Pesos | Kalam 400 y 700, Patrick Hand |
+
+**Esta es la UNICA peticion externa que hace la app.** La consecuencia es
+directa: al cargar la pagina se le filtra la IP del visitante a Google. No
+lleva datos del CV: se mandan la URL de la hoja de estilos y la de cada
+`.woff2`, que son las mismas para todos los que abren la pagina.
+
+Es la **unica excepcion** a "sin peticiones externas". El resto de las
+librerias estan vendorizadas, asi que fuera de las tipografias no hay ningun
+otro recurso de terceros en red.
+
+Y es una excepcion eliminable: la OFL permite auto-hospedar los `.woff2`, y
+bastaria con dejarlos en `assets/fonts/` para que la app quedara con cero
+peticiones a terceros. El repo hoy no lo hace, y por eso se documenta en vez de
+ocultarse.
+
+### Fotos de ejemplo del carrusel
+
+5 archivos en `assets/examples/`, que usa el carrusel de la portada
+(`js/carousel.js` L25-45). Las 5 fueron recortadas y reescaladas a `1200x627`
+para el carrusel.
+
+| Archivo | `dc:creator` (XMP) | `dc:rights` (XMP) |
+|---|---|---|
+| `01-sobrio.jpg` | Ludmila Nilava | DREAMWOOD |
+| `02-una-pagina.jpg` | Ludmila Nilava | DREAMWOOD |
+| `03-secciones.jpg` | Ludmila Nilava | DREAMWOOD |
+| `04-logros.jpg` | **sin metadatos** | **sin metadatos** |
+| `05-a-mano.jpg` | Ludmila Nilava | DREAMWOOD |
+
+**Lo que si se puede verificar desde el repo:** 4 de las 5 llevan metadatos XMP
+que acreditan a `Ludmila Nilava` como autora y `DREAMWOOD` en `dc:rights`.
+
+**Lo que NO se puede verificar:** la plataforma de origen y la licencia exacta.
+`dc:rights` dice `DREAMWOOD`, que es una marca registrada de derechos, no el
+nombre de una licencia ni de una plataforma, y ningun archivo del repo aclara
+mas. Asi que la procedencia y la licencia quedan marcadas como **procedencia
+por confirmar**. Preferimos dejarlo incompleto a inventar una fuente que el
+archivo no respalda.
+
+Se atribuye a la fotogra de todos modos porque es lo correcto, aunque la
+licencia que sea termine (y sigue sin confirmarse) no llegue a exigirlo.
+
+`04-logros.jpg` es el caso limite: no conserva `dc:creator` ni `dc:rights`, asi
+que su origen **no se puede verificar desde el archivo**. Se le atribuye la
+misma autoria por compartir origen con las otras 4, y eso es una **inferencia**,
+no un dato que el archivo respalde.
+
+### Sobre los nombres de terceros
+
+Los nombres que aparecen arriba (los autores de jsPDF, la fotogra del
+carrusel) **no son datos personales de quien mantiene el proyecto**. Son
+atribucion de fuente: la MIT y la OFL exigen que esos avisos se conserven, y
+su presencia en el repo es deliberada y conforme a licencia. La unica
+identidad del propietario en todo el repositorio es la firma publica
+`gambito700` en el `LICENSE` y en los 2 enlaces del pie de pagina.
+

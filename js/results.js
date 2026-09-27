@@ -553,6 +553,285 @@ async function descargarTodosLosPdf() {
   }
 }
 
+/* ============================================================
+   PDF VIA LA API (cv-builder-api en Render)
+   ------------------------------------------------------------
+   ESTE ES UN CAMINO NUEVO, NO UN REEMPLAZO. La tarjeta de cada
+   plantilla tiene hoy dos formas de obtener un PDF y siguen
+   intactas:
+
+     1. "Descargar PDF"  -> jsPDF en el navegador (js/pdfgen.js),
+                            instantaneo, sin servidor.
+     2. este bloque      -> LaTeX compilado por pdflatex en Render,
+                            con el diseno exacto del .tex.
+
+   Se agrego, no se modifico. Cual de los dos queda como principal es
+   decision del owner, no de este archivo. Lo que si hace este bloque es
+   ser HONESTO con los tres fallos que de verdad importan, porque en un
+   free tier los tres pasan seguido:
+
+     - la API esta DORMIDA (Render apaga el free tier a los ~15 min),
+     - la API tarda DEMASIADO (cold start + compilacion, 90 s de tope),
+     - el LaTeX NO COMPILA (el .tex tiene algo que pdflatex no acepta).
+
+   Confundirlos seria mentir: el primero se arregla esperando, el segundo
+   reintentando y el tercero cambiando el CV.
+   ============================================================ */
+
+/* Card (indice de generateAllTemplates) -> etiqueta que viaja en el campo
+   'template' del POST. Se manda para que el servidor pueda loguear; no
+   cambia el resultado. El PDF sale con el nombre de la plantilla, no con
+   el indice, para que el log del servidor no dependa de este archivo. */
+var API_PLANTILLAS = ['moderno', 'creativo', 'clasico'];
+
+/* Segundos que se le conceden al arranque en frio antes de cambiar el
+   cartel del boton. El ping de /health ya dio el aviso: si la API no
+   respondio, el primer compile paga el despertar. Pasado este umbral ya
+   no hay nada mas que informar: la peticion esta en cola o no va a
+   volver nunca. */
+var API_MS_AVISO_DESPERTAR = 8000;
+
+/**
+ * Config lista para la card: nombre de plantilla, si la API esta
+ * configurada de verdad y el estado que quedo del ultimo ping.
+ */
+function apiConfigDeCard(cardIndex) {
+  var etiqueta = API_PLANTILLAS[cardIndex] || 'desconocido';
+  var configurada = (typeof apiConfigurada === 'function') ? apiConfigurada() : false;
+  return {
+    etiqueta: etiqueta,
+    configurada: configurada,
+    estado: (window.LATEX_SERVICE && window.LATEX_SERVICE.estado) || 'sin-configurar'
+  };
+}
+
+/**
+ * Nombre del archivo. Sin nombre, RUT, email ni telefono: el nombre de un
+ * archivo viaja en logs, historial y capturas de pantalla.
+ */
+function apiNombreArchivo(cardIndex) {
+  return 'cv-api-plantilla-' + (cardIndex + 1) + '.pdf';
+}
+
+/**
+ * Traducir un fallo de la API a algo que la persona pueda entender y
+ * reintentar. El mensaje sale del CODIGO (err.codigoApi), no del texto
+ * crudo de fetch ni del JSON de Flask: esos se van al log.
+ * @param {Error} err
+ * @returns {string}
+ */
+function apiMensajeError(err) {
+  var codigo = err && err.codigoApi;
+  var crudo = String((err && err.message) || err || '');
+  var local = 'Usa "Descargar PDF": arma el mismo CV en tu navegador, al instante.';
+
+  if (codigo === 'API_CONFIG') {
+    return 'El servicio de compilación no está configurado todavía. ' + local;
+  }
+  if (codigo === 'API_DORMIDA') {
+    return 'El servidor estaba dormido y no respondió. Se está despertando: espera unos segundos y reintenta. ' + local;
+  }
+  if (codigo === 'API_TIMEOUT') {
+    return 'El servidor tardó más de 90 segundos y se cortó la espera. Pasa cuando el primer intento carga el servidor frío: reintenta una vez. ' + local;
+  }
+  if (codigo === 'API_COMPILACION') {
+    return 'El servidor no pudo compilar este LaTeX. Suele ser un carácter que pdflatex no acepta: usa "Descargar .tex" para ver el código. ' + local;
+  }
+  if (codigo === 'API_OCUPADO') {
+    return 'El servidor está ocupado con otra compilación. Reintenta en unos segundos. ' + local;
+  }
+  if (codigo === 'API_LIMITE') {
+    return 'Demasiadas peticiones seguidas desde esta red. Espera un poco antes de reintentar. ' + local;
+  }
+  if (codigo === 'API_NO_AUTH') {
+    return 'El servidor rechazó la clave de la app. Es un problema de configuración, no tuyo: ' + local;
+  }
+  return 'No se pudo generar el PDF en el servidor: '
+    + (crudo.substring(0, 160) || 'error desconocido') + '. ' + local;
+}
+
+/**
+ * Estado visual del boton de la API. 'idle' | 'despertando' |
+ * 'compilando'. El texto cambia en vez de dejar el boton mudo, que es
+ * justo lo que hace que un cold start de 40 s parezca colgado.
+ */
+function apiEstadoBoton(cardIndex, estado) {
+  var btn = document.getElementById('api-btn-pdf-' + cardIndex);
+  var label = document.getElementById('api-btn-pdf-label-' + cardIndex);
+  var spinner = document.getElementById('api-btn-pdf-spinner-' + cardIndex);
+  var cargando = estado !== 'idle';
+
+  if (btn) {
+    btn.disabled = cargando;
+    if (cargando) {
+      btn.setAttribute('aria-busy', 'true');
+      btn.classList.add('btn--loading');
+    } else {
+      btn.removeAttribute('aria-busy');
+      btn.classList.remove('btn--loading');
+    }
+  }
+  if (label) {
+    label.textContent = estado === 'despertando' ? 'Despertando el servidor...'
+      : estado === 'compilando' ? 'Compilando en el servidor...'
+        : 'PDF del servidor';
+  }
+  if (spinner) spinner.hidden = !cargando;
+}
+
+/**
+ * Mensaje de exito o error junto al boton (region aria-live). Vacio = nada.
+ */
+function apiMensaje(cardIndex, texto, tono) {
+  var el = document.getElementById('api-pdf-msg-' + cardIndex);
+  if (!el) return;
+  if (!texto) {
+    el.textContent = '';
+    el.removeAttribute('data-tone');
+    return;
+  }
+  el.textContent = texto;
+  el.setAttribute('data-tone', tono || 'ok');
+}
+
+/**
+ * Markup de la accion "PDF del servidor" de una card. Se renderiza
+ * deshabilitada y con un aviso cuando la API todavia no esta configurada:
+ * un boton que va a fallar siempre es peor que un boton que explica por
+ * que no se puede usar.
+ */
+function apiPdfAccionesHtml(cardIndex) {
+  var cfg = apiConfigDeCard(cardIndex);
+  var conectorCargado = typeof compilarLatex === 'function';
+
+  var nota, tono;
+  if (!conectorCargado) {
+    nota = 'PDF del servidor no disponible: falta js/latex-service.js';
+    tono = 'warn';
+  } else if (!cfg.configurada) {
+    /* Se dice QUE falta, no solo que falta algo: el dueño tiene dos lineas
+       exactas que tocar y asi no tiene que leer el archivo para saberlo. */
+    nota = 'PDF del servidor sin configurar: falta CV_URL_PENDIENTE=false y CV_API_KEY en js/latex-service.js (o los atributos data-cv-api-url y data-cv-api-key en index.html)';
+    tono = 'warn';
+  } else {
+    nota = 'LaTeX compilado por el servidor, con el diseño exacto del .tex';
+    tono = cfg.estado === 'lista' ? 'ats' : 'visual';
+  }
+
+  var deshabilitado = (!conectorCargado || !cfg.configurada) ? 'aria-disabled="true"' : '';
+
+  return `
+          <button class="btn btn--pdf" type="button" id="api-btn-pdf-${cardIndex}"
+                  onclick="descargarPdfViaApi(${cardIndex})"
+                  aria-describedby="tpl-nombre-${cardIndex} api-pdf-note-${cardIndex} api-pdf-msg-${cardIndex}"
+                  ${deshabilitado}
+                  title="Envía tu .tex al servidor y recibes el PDF compilado">
+            <span class="btn-spinner" id="api-btn-pdf-spinner-${cardIndex}" hidden aria-hidden="true"></span>
+            <span id="api-btn-pdf-label-${cardIndex}">PDF del servidor</span>
+          </button>
+          <p class="pdf-note" id="api-pdf-note-${cardIndex}" data-tone="${tono}">${nota}</p>
+          <p class="pdf-msg" id="api-pdf-msg-${cardIndex}" role="status" aria-live="polite"></p>`;
+}
+
+/**
+ * Descargar el PDF de una plantilla COMPILANDO EL .tex EN EL SERVIDOR.
+ *
+ * No compite con el PDF local de jsPDF: este es el unico camino que pasa
+ * por pdflatex, asi que es el que reproduce el diseno del .tex y el que
+ * va a servir cuando la compilacion la haga la API de verdad.
+ *
+ * @param {number} cardIndex  Indice de la card (0, 1, 2)
+ * @returns {Promise<boolean>} true si el archivo salio
+ */
+async function descargarPdfViaApi(cardIndex) {
+  var cfg = apiConfigDeCard(cardIndex);
+  var templates = window._generatedTemplates;
+
+  if (typeof compilarLatex !== 'function') {
+    showToast('El conector con el servidor no está cargado.', 'error');
+    return false;
+  }
+  if (!cfg.configurada) {
+    apiMensaje(cardIndex, apiMensajeError({ codigoApi: 'API_CONFIG' }), 'error');
+    showToast('El servidor de compilación no está configurado.', 'error');
+    return false;
+  }
+  if (!templates || !templates[cardIndex]) {
+    apiMensaje(cardIndex, 'No hay un .tex generado para esta plantilla.', 'error');
+    showToast('No hay un .tex generado para esta plantilla.', 'error');
+    return false;
+  }
+
+  var btn = document.getElementById('api-btn-pdf-' + cardIndex);
+  if (btn && (btn.disabled || btn.getAttribute('aria-busy') === 'true')) {
+    return false; // doble clic: el primero sigue en vuelo
+  }
+
+  /* Aviso honesto ANTES de esperar. Si el ping no habia despertado el servicio, lo que
+     esta pasando es el arranque en frio del free tier, y decirlo es la
+     diferencia entre 40 s utiles y 40 s de "esta roto". */
+  var despertando = cfg.estado !== 'lista';
+  apiEstadoBoton(cardIndex, despertando ? 'despertando' : 'compilando');
+  apiMensaje(cardIndex, despertando
+    ? 'El servidor puede estar despertando. Esto puede tardar hasta un minuto la primera vez.'
+    : 'Compilando tu LaTeX en el servidor...', 'ok');
+  setCompileStatus('compiling', despertando ? 'Despertando el servidor...' : 'Compilando en el servidor...',
+    templates[cardIndex].name + ': se compila en el servidor, no en tu navegador.');
+  // Al logger solo la etiqueta de plantilla y el indice. Nunca el CV.
+  if (window.LOG) window.LOG.info('pdf-api: compilando', { plantilla: cfg.etiqueta, card: cardIndex });
+
+  /* El cartel pasa de "despertando" a "compilando" si el arranque en frio
+     sigue vivo a los 8 s: la parte lenta ya paso y ahora hay trabajo real. */
+  var cambiarCartel = despertando
+    ? setTimeout(function () {
+      if (btn && btn.getAttribute('aria-busy') === 'true') {
+        apiEstadoBoton(cardIndex, 'compilando');
+        setCompileStatus('compiling', 'Compilando en el servidor...',
+          'El servidor ya despertó; ahora compila el LaTeX.');
+      }
+    }, API_MS_AVISO_DESPERTAR)
+    : null;
+
+  try {
+    var blob = await compilarLatex(templates[cardIndex].tex, cfg.etiqueta);
+
+    if (!blob || blob.size < 100) {
+      var e1 = new Error('la API devolvio ' + (blob ? blob.size : 0) + ' bytes');
+      e1.codigoApi = 'API_COMPILACION';
+      throw e1;
+    }
+
+    descargarBlob(blob, apiNombreArchivo(cardIndex));
+
+    var kb = Math.round(blob.size / 1024);
+    apiMensaje(cardIndex, 'PDF descargado: ' + apiNombreArchivo(cardIndex) + ' (' + kb + ' KB)', 'ok');
+    showToast('PDF del servidor descargado (' + kb + ' KB)', 'success');
+    setCompileStatus('success', 'PDF del servidor listo',
+      apiNombreArchivo(cardIndex) + ' (' + kb + ' KB), compilado con pdflatex.');
+    if (window.LOG) {
+      window.LOG.info('pdf-api: descargado', { plantilla: cfg.etiqueta, bytes: blob.size });
+    }
+    return true;
+
+  } catch (err) {
+    var mensaje = apiMensajeError(err);
+    apiMensaje(cardIndex, mensaje, 'error');
+    showToast('No se pudo generar el PDF en el servidor', 'error');
+    setCompileStatus('error', 'No se generó el PDF en el servidor', mensaje);
+    if (window.LOG) {
+      window.LOG.error('pdf-api: fallo', {
+        plantilla: cfg.etiqueta,
+        codigo: (err && err.codigoApi) || 'DESCONOCIDO'
+      });
+    }
+    return false;
+
+  } finally {
+    if (cambiarCartel) clearTimeout(cambiarCartel);
+    apiEstadoBoton(cardIndex, 'idle');
+  }
+}
+
 /**
  * Mostrar instrucciones de compilacion en modal
  */

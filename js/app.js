@@ -721,6 +721,25 @@ function renderSkills(container, data) {
     </div>
     <hr class="dashed-line">
     <div class="section">
+      <h3 class="section-title scribble-underline">Fortalezas</h3>
+      <p style="margin-bottom: var(--space-4); color: #666;">
+        Agrega o elimina fortalezas. Es la única sección del CV que se rellena
+        solo si tú escribes algo.
+      </p>
+      <div class="skill-category">
+        <div class="skill-input-row">
+          <input class="form-input skill-input fortaleza-input" type="text"
+                 placeholder="Agregar fortaleza..."
+                 onkeydown="handleFortalezaKeydown(event)">
+          <button class="btn btn--sm" onclick="addFortaleza()" aria-label="Agregar fortaleza">+</button>
+        </div>
+        <div class="skill-tags" id="fortalezas-tags">
+          ${renderFortalezaTags(data.fortalezas || [])}
+        </div>
+      </div>
+    </div>
+    <hr class="dashed-line">
+    <div class="section">
       <h3 class="section-title scribble-underline">Proyectos</h3>
       <div class="entry-list" id="projects-list">
   `;
@@ -885,6 +904,78 @@ function removeSkill(category, btn) {
   tag.remove();
 }
 
+/* ------------------------------------------------------------
+   FORTALEZAS
+   Lista de texto libre, un item por entrada. No es una categoria mas de
+   data.skills: vive en data.fortalezas y alimenta la seccion Fortalezas de la
+   plantilla LaTeX. Comparte el marcado de tags con las habilidades para que se
+   vea igual, pero lleva su propio prefijo de clases y guarda el texto en
+   data-valor: removeFortaleza lee ese atributo y no el textContent, que con
+   "X" dentro del texto borraria de mas.
+   ------------------------------------------------------------ */
+
+/**
+ * Renderizar el HTML de los tags de fortalezas
+ */
+function renderFortalezaTags(fortalezas) {
+  return fortalezas.map(f => `
+    <span class="skill-tag fortaleza-tag" data-valor="${escapeAttr(f)}">
+      ${escapeHtml(f)}
+      <button class="skill-tag-remove" onclick="removeFortaleza(this)" aria-label="Eliminar ${escapeAttr(f)}">X</button>
+    </span>
+  `).join('');
+}
+
+/**
+ * Manejar tecla Enter en input de fortalezas
+ */
+function handleFortalezaKeydown(event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addFortaleza();
+  }
+}
+
+/**
+ * Agregar fortaleza
+ */
+function addFortaleza() {
+  const input = document.querySelector('.fortaleza-input');
+  if (!input) return;
+
+  const value = input.value.trim();
+  if (!value) return;
+
+  if (!wizard.data.fortalezas) {
+    wizard.data.fortalezas = [];
+  }
+
+  if (wizard.data.fortalezas.includes(value)) {
+    showToast('Fortaleza ya existe', 'error');
+    return;
+  }
+
+  wizard.data.fortalezas.push(value);
+  input.value = '';
+
+  // Re-render solo de los tags, sin volver a pintar el paso entero
+  const container = document.getElementById('fortalezas-tags');
+  if (container) {
+    container.innerHTML = renderFortalezaTags(wizard.data.fortalezas);
+  }
+}
+
+/**
+ * Eliminar fortaleza
+ */
+function removeFortaleza(btn) {
+  const tag = btn.closest('.fortaleza-tag');
+  if (!tag) return;
+  const value = tag.dataset.valor;
+  wizard.data.fortalezas = (wizard.data.fortalezas || []).filter(f => f !== value);
+  tag.remove();
+}
+
 /* ============================================================
    STEP 5: RESULTADOS
    ============================================================ */
@@ -955,6 +1046,7 @@ function renderResults(container, data) {
             Descargar .tex
           </button>
           ${pdfAccionesHtml(i)}
+          ${apiPdfAccionesHtml(i)}
         </div>
       </div>
     `;
@@ -1008,6 +1100,12 @@ function renderResults(container, data) {
      nada: se borra al cerrarse y vuelve a salir cada vez que se entra aca,
      incluso si se retrocede y se vuelve. */
   if (typeof tutorialStart === 'function') tutorialStart('resultados');
+
+  /* Despertar el compilador de LaTeX en Render ANTES de que la persona toque
+     el boton. El free tier se duerme a los ~15 min y el primer request paga
+     el arranque en frio (medio minuto largo); sin este ping el boton parece
+     roto. Es fire-and-forget: pingApi no lanza y no bloquea el render. */
+  if (typeof pingApi === 'function') pingApi();
 }
 
 /**
