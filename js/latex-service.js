@@ -31,23 +31,14 @@
  * ==========================================================================
  *
  * CV_API_URL
- *   >>> NO CONFIES EN ESTE VALOR. <<<
- *   'https://cv-builder-api.onrender.com' es un SUPUESTO hecho a mano: Render
- *   no siempre usa el nombre del repo como hostname (puede ser
- *   cv-builder-api-xxxx.onrender.com si el repo ya tuvo otro servicio, o el
- *   dominio propio que se le configure). ESTA ES LA TAREA PENDIENTE:
+ *   Hostname REAL que asigno Render: https://cv-builder-api-lw51.onrender.com
+ *   El nombre del repo no sirvio (cv-builder-api ya estaba ocupado en Render y
+ *   por ahi sale el sufijo -lw51), asi que el valor se leyo del dashboard, no
+ *   se supusio. Si el servicio se renombra, hay que leer el hostname otra vez.
  *
- *       1) desplegar cv-builder-api en Render,
- *       2) leer el hostname REAL que Render muestre en el dashboard,
- *       3) pegarlo abajo, en la linea de CV_API_URL.
- *
- *   Es la unica linea que hay que cambiar para que el boton funcione. Si se
- *   deja el placeholder, apiConfigurada() devuelve false y la UI lo dice en
- *   vez de mandarle el CV a un host equivocado.
- *
- *   Se puede sobreescribir sin editar este archivo, para no tener el valor
- *   real en el repo: poner data-cv-api-url="https://..." en el <body> de
- *   index.html (o en el <script> que carga este archivo). El atributo gana.
+ *   Se puede sobreescribir sin editar este archivo: poner
+ *   data-cv-api-url="https://..." en el <body> de index.html (o en el <script>
+ *   que carga este archivo). El atributo gana.
  *
  * CV_API_KEY
  *   La API exige el header X-API-Key (app.py:476). Como este frontend es
@@ -56,27 +47,26 @@
  *   Es una BARRERA SUAVE contra el uso casual y los bots de a pie, no contra
  *   alguien decidido; la barrera de verdad esta en el rate limit por token
  *   bucket del servidor (app.py:159) y en que el servicio solo compile CVs
- *   ajenos a costa del dueño de la API. Que la clave viva en el repo es un
+ *   ajenos a costa del dueno de la API. Que la clave viva en el repo es un
  *   riesgo aceptado, no un descuido: vaciarla aqui solo haria fallar el boton.
  *
  *   Misma regla que la URL: se puede sobreescribir con data-cv-api-key="..."
- *   en index.html para no dejar el valor real en el archivo. Se deja VACIA a
- *   proposito, para que nadie reuse por accidente una clave de ejemplo.
+ *   en index.html. Al rotarla hay que cambiarla en los dos sitios, Render
+ *   (Environment) y aqui, o el servidor respondera 401.
  *
  * CV_URL_PENDIENTE
- *   Bandera de una linea, no un valor. Mientras CV_URL_PENDIENTE sea true el
- *   boton se renderiza deshabilitado, porque CV_API_URL todavia es un
- *   supuesto. Ponerla en false DESPUES de pegar el hostname real en
- *   CV_API_URL. Es una bandera y no una comparacion de valores a proposito: si
- *   la comprobacion fuera "¿sigue siendo la URL el placeholder?", al pegar la
- *   URL real en CV_API_URL la comprobacion compararia la URL consigo misma,
- *   apiConfigurada() devolveria false para siempre y el boton quedaria
- *   deshabilitado aun con el hostname perfecto. La bandera no se queda vieja
- *   asi: hay que moverla a mano, y la UI dice cual de las dos lineas falta.
+ *   Bandera de una linea, no un valor. While true el boton se renderiza
+ *   deshabilitado y la UI explica que falta configurar. Va en false porque el
+ *   servicio esta desplegado y verificado: GET /health responde 200 con
+ *   auth=ok y sandbox=ok, y POST /compile devolvio un PDF valido.
+ *   Es una bandera y no una comparacion de valores a proposito: si la
+ *   comprobacion fuera "el sigue siendo el placeholder?", al pegar la URL real
+ *   compararia la URL consigo misma, apiConfigurada() devolveria false para
+ *   siempre y el boton quedaria deshabilitado con el hostname perfecto.
  */
-const CV_API_URL = 'https://cv-builder-api.onrender.com';
-const CV_URL_PENDIENTE = true;
-const CV_API_KEY = '';
+const CV_API_URL = 'https://cv-builder-api-lw51.onrender.com';
+const CV_URL_PENDIENTE = false;
+const CV_API_KEY = 'HzfjFpjJoF5LTZtzSOzR-tysXPJwXTLhd1JRUqL-2D0';
 
 /* Tope de espera del cliente. El servidor corta la compilacion a los 30 s x 2
    pasadas = 60 s (COMPILE_TIMEOUT_SECONDS x LATEX_PASSES en app.py:86), mas el
