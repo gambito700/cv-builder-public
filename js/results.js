@@ -164,21 +164,6 @@ function downloadTex(templateIndex) {
 }
 
 /**
- * Descargar todos los .tex como archivos individuales
- * (No usamos ZIP para evitar dependencias, descarga uno por uno)
- */
-function downloadAllTex() {
-  const templates = window._generatedTemplates;
-  if (!templates) return;
-
-  templates.forEach((tpl, i) => {
-    setTimeout(() => downloadTex(i), i * 500);
-  });
-
-  showToast('Descargando 3 archivos .tex...', 'success');
-}
-
-/**
  * Descargar CV como PDF desde el propio navegador
  * ---------------------------------------------------------------
  * El PDF lo arma js/pdfgen.js (jsPDF) en el cliente. La version anterior de
@@ -267,7 +252,7 @@ function pdfAccionesHtml(cardIndex) {
   var hayMotor = pdfMotorDisponible();
   var nota = hayMotor
     ? pdfNotaAts(cfg)
-    : 'PDF no disponible en este navegador: recarga la página o usa Descargar .tex.';
+    : 'PDF no disponible en este navegador: recarga la página o usa "Descargar PDF LaTeX".';
 
   return `
           <button class="btn btn--pdf" type="button" id="btn-pdf-${cardIndex}"
@@ -340,16 +325,16 @@ function pdfMensajeError(err) {
   var crudo = String((err && err.message) || err || '');
 
   if (codigo === 'PDF_MOTOR' || crudo.indexOf('jsPDF no esta disponible') !== -1) {
-    return 'No se generó el PDF porque el motor de PDF no cargó (o el navegador lo bloqueó). Recarga la página y reintenta; si sigue igual, usa "Descargar .tex".';
+    return 'No se generó el PDF porque el motor de PDF no cargó (o el navegador lo bloqueó). Recarga la página y reintenta; si sigue igual, usa "Descargar PDF LaTeX".';
   }
   if (codigo === 'PDF_API') {
-    return 'Este navegador no deja sacar el PDF (jsPDF no expone output() ni save()). Reintenta en otro navegador o usa "Descargar .tex".';
+    return 'Este navegador no deja sacar el PDF (jsPDF no expone output() ni save()). Reintenta en otro navegador o usa "Descargar PDF LaTeX".';
   }
   if (codigo === 'PDF_VACIO') {
     return 'El PDF salió vacío. Revisa que tengas datos cargados y reintenta.';
   }
   if (codigo === 'PDF_FIRMA') {
-    return 'El archivo generado no es un PDF válido. Reintenta o usa "Descargar .tex".';
+    return 'El archivo generado no es un PDF válido. Reintenta o usa "Descargar PDF LaTeX".';
   }
   return 'No se generó el PDF: ' + (crudo.substring(0, 180) || 'error desconocido') + ' Reintenta.';
 }
@@ -548,7 +533,7 @@ async function descargarTodosLosPdf() {
     showToast(ok + '/' + total + ' PDFs descargados', 'success');
   } else {
     setCompileStatus('error', 'Algunos PDFs no se generaron',
-      ok + '/' + total + '. Revisa el mensaje en cada opción o usa "Descargar .tex".');
+      ok + '/' + total + '. Revisa el mensaje en cada opción o usa "Descargar PDF LaTeX".');
     showToast(ok + '/' + total + ' PDFs descargados', 'error');
   }
 }
@@ -644,7 +629,7 @@ function apiMensajeError(err) {
       + latex + ' ' + local;
   }
   if (codigo === 'API_COMPILACION') {
-    return 'El servidor no pudo compilar este LaTeX. Suele ser un carácter que pdflatex no acepta: usa "Descargar .tex" para ver el código. ' + local;
+    return 'El servidor no pudo compilar este LaTeX pero no dijo por qué. Usa "Ver Código LaTeX" para revisar el código. ' + local;
   }
   if (codigo === 'API_OCUPADO') {
     return 'El servidor está ocupado con otra compilación. Reintenta en unos segundos. ' + local;
@@ -683,7 +668,7 @@ function apiEstadoBoton(cardIndex, estado) {
   if (label) {
     label.textContent = estado === 'despertando' ? 'Despertando el servidor...'
       : estado === 'compilando' ? 'Compilando en el servidor...'
-        : 'PDF del servidor';
+        : 'Descargar PDF LaTeX';
   }
   if (spinner) spinner.hidden = !cargando;
 }
@@ -704,7 +689,7 @@ function apiMensaje(cardIndex, texto, tono) {
 }
 
 /**
- * Markup de la accion "PDF del servidor" de una card. Se renderiza
+ * Markup de la accion "Descargar PDF LaTeX" de una card. Se renderiza
  * deshabilitada y con un aviso cuando la API todavia no esta configurada:
  * un boton que va a fallar siempre es peor que un boton que explica por
  * que no se puede usar.
@@ -715,12 +700,12 @@ function apiPdfAccionesHtml(cardIndex) {
 
   var nota, tono;
   if (!conectorCargado) {
-    nota = 'PDF del servidor no disponible: falta js/latex-service.js';
+    nota = 'PDF LaTeX no disponible: falta js/latex-service.js';
     tono = 'warn';
   } else if (!cfg.configurada) {
     /* Se dice QUE falta, no solo que falta algo: el dueño tiene dos lineas
        exactas que tocar y asi no tiene que leer el archivo para saberlo. */
-    nota = 'PDF del servidor sin configurar: falta CV_URL_PENDIENTE=false y CV_API_KEY en js/latex-service.js (o los atributos data-cv-api-url y data-cv-api-key en index.html)';
+    nota = 'PDF LaTeX sin configurar: falta CV_URL_PENDIENTE=false y CV_API_KEY en js/latex-service.js (o los atributos data-cv-api-url y data-cv-api-key en index.html)';
     tono = 'warn';
   } else {
     nota = 'LaTeX compilado por el servidor, con el diseño exacto del .tex';
@@ -736,7 +721,7 @@ function apiPdfAccionesHtml(cardIndex) {
                   ${deshabilitado}
                   title="Envía tu .tex al servidor y recibes el PDF compilado">
             <span class="btn-spinner" id="api-btn-pdf-spinner-${cardIndex}" hidden aria-hidden="true"></span>
-            <span id="api-btn-pdf-label-${cardIndex}">PDF del servidor</span>
+            <span id="api-btn-pdf-label-${cardIndex}">Descargar PDF LaTeX</span>
           </button>
           <p class="pdf-note" id="api-pdf-note-${cardIndex}" data-tone="${tono}">${nota}</p>
           <p class="pdf-msg" id="api-pdf-msg-${cardIndex}" role="status" aria-live="polite"></p>`;
@@ -814,8 +799,8 @@ async function descargarPdfViaApi(cardIndex) {
 
     var kb = Math.round(blob.size / 1024);
     apiMensaje(cardIndex, 'PDF descargado: ' + apiNombreArchivo(cardIndex) + ' (' + kb + ' KB)', 'ok');
-    showToast('PDF del servidor descargado (' + kb + ' KB)', 'success');
-    setCompileStatus('success', 'PDF del servidor listo',
+    showToast('PDF LaTeX descargado (' + kb + ' KB)', 'success');
+    setCompileStatus('success', 'PDF LaTeX listo',
       apiNombreArchivo(cardIndex) + ' (' + kb + ' KB), compilado con pdflatex.');
     if (window.LOG) {
       window.LOG.info('pdf-api: descargado', { plantilla: cfg.etiqueta, bytes: blob.size });
@@ -839,52 +824,6 @@ async function descargarPdfViaApi(cardIndex) {
     if (cambiarCartel) clearTimeout(cambiarCartel);
     apiEstadoBoton(cardIndex, 'idle');
   }
-}
-
-/**
- * Mostrar instrucciones de compilacion en modal
- */
-function showCompileInstructions() {
-  const overlay = document.getElementById('modal-overlay');
-  const modal = document.getElementById('modal-content');
-
-  modal.innerHTML = `
-    <button class="modal-close" onclick="closeModal()" aria-label="Cerrar">&times;</button>
-    <h3 style="margin-bottom: var(--space-6);">Tu PDF, al Instante</h3>
-
-    <div style="margin-bottom: var(--space-6);">
-      <h4 style="margin-bottom: var(--space-3);">La forma más rápida: "Descargar PDF"</h4>
-      <p style="margin-bottom: var(--space-2);">
-        El boton <strong>"Descargar PDF"</strong> arma tu CV en el instante, en tu
-        propio navegador. No necesitas instalar nada, abrir una terminal ni crear
-        cuentas.
-      </p>
-      <p style="color: #666; font-size: var(--text-sm);">
-        El archivo se llama <code>cv-plantilla-N.pdf</code> y no lleva tu nombre ni
-        ningún dato tuyo en el nombre. Nada sale de tu navegador: no hay servidor de
-        compilación.
-      </p>
-    </div>
-
-    <details style="margin-bottom: var(--space-6);">
-      <summary style="cursor: pointer; color: #666; font-size: var(--text-sm);">
-        Solo si eres usuario avanzado: compilar el .tex tú mismo
-      </summary>
-      <p style="margin-top: var(--space-3); margin-bottom: var(--space-2); color: #666; font-size: var(--text-sm);">
-        Descarga el archivo <code style="background: #eee; padding: 2px 6px; border-radius: 4px;">.tex</code>
-        con el botón "Descargar .tex" y compílalo con tu instalación local de LaTeX
-        (ej. <code style="background: #eee; padding: 2px 6px; border-radius: 4px;">pdflatex cv.tex</code>).
-        Esta opción es opcional y solo para quien ya tiene un compilador instalado.
-      </p>
-    </details>
-
-    <button class="btn" onclick="closeModal()">Cerrar</button>
-  `;
-
-  modalTrigger = document.activeElement;
-  overlay.classList.add('active');
-  trapFocus(modal);
-  document.addEventListener('keydown', handleModalEscape);
 }
 
 /**

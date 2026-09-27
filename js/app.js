@@ -226,7 +226,7 @@ function phoneGroupHtml(telefonoGuardado) {
         <label class="form-label" for="field-telefono-num">Teléfono</label>
         <div class="phone-group">
           <select class="form-select phone-country" id="field-telefono-pais"
-                  aria-label="País y prefijo internacional del teléfono"
+                  aria-label="País y prefijo internacional del telófono"
                   aria-describedby="hint-telefono">
             ${phoneOptionsHtml(tel.indice)}
           </select>
@@ -997,7 +997,7 @@ function renderResults(container, data) {
   let html = `
     <div class="results-header">
       <h2 class="scribble-underline">Tus Opciones de CV</h2>
-      <p>Elige uno de los 3 diseños generados. Puedes ver el código, copiarlo, descargar el .tex o bajar el PDF que se arma en tu propio navegador</p>
+      <p>Elige uno de los 3 diseños. <strong>Ver Código LaTeX</strong> abre el archivo .tex con sus opciones para copiarlo o guardarlo, y los dos PDF te dan el documento listo para imprimir.</p>
     </div>
 
     <div id="compile-status" class="compile-status" role="status" aria-live="polite" hidden>
@@ -1039,12 +1039,6 @@ function renderResults(container, data) {
           <button class="btn" type="button" onclick="showLatexCode(${i})" aria-label="Ver código LaTeX de ${tpl.name}">
             Ver Código LaTeX
           </button>
-          <button class="btn btn--primary" type="button" onclick="copyLatexCode(${i})" aria-label="Copiar código de ${tpl.name}">
-            Copiar Código
-          </button>
-          <button class="btn" type="button" onclick="downloadTex(${i})" aria-label="Descargar archivo .tex de ${tpl.name}">
-            Descargar .tex
-          </button>
           ${pdfAccionesHtml(i)}
           ${apiPdfAccionesHtml(i)}
         </div>
@@ -1056,13 +1050,15 @@ function renderResults(container, data) {
     </div>
 
     <div class="compile-section">
-      <h3 class="scribble-underline">Cómo Llevarte tu CV</h3>
+      <h3 class="scribble-underline">Dos formas de llevarte el PDF</h3>
       <p class="compile-disclaimer">
-        <strong>EN TU NAVEGADOR:</strong> "Descargar PDF" arma el PDF en tu propio
-        navegador con jsPDF, al instante. No hay servidor de compilación, no se envía
-        nada a internet y el archivo se llama <code>cv-plantilla-N.pdf</code>: sin
-        nombre, RUT, email ni teléfono en el nombre. Si prefieres el código,
-        "Descargar .tex" te da el LaTeX para compilar donde quieras.
+        <strong>EN TU NAVEGADOR:</strong> "Descargar PDF" arma el documento al
+        instante con jsPDF, sin mandar nada a internet. El archivo se llama
+        <code>cv-plantilla-N.pdf</code>: sin nombre, RUT, email ni telófono.
+        <br>
+        <strong>COMPILADO CON LATEX:</strong> "Descargar PDF LaTeX" envía el .tex
+        a la API, que lo compila con pdflatex y devuelve el mismo CV con tipografía
+        LaTeX real. Tarda unos segundos la primera vez.
       </p>
     </div>
 
@@ -1072,9 +1068,6 @@ function renderResults(container, data) {
       </button>
       <button class="btn" onclick="wizard.goToStep(4)">
         &lt;- Editar Habilidades
-      </button>
-      <button class="btn btn--primary" onclick="downloadAllTex()">
-        Descargar Todos (.tex)
       </button>
       <button class="btn btn--pdf" id="btn-bulk-pdf" type="button" onclick="descargarTodosLosPdf()"
               aria-describedby="btn-bulk-pdf-label" title="Genera los 3 PDFs en tu navegador, uno por uno">
