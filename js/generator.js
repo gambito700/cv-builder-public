@@ -438,6 +438,17 @@ function generateModerno(data) {
   const skills = getSkillsByArea(data, area);
   const perfil = getPerfil(data, area);
 
+  // Lineas de contacto del sidebar, solo las que tienen contenido. Antes se
+  // emitian siempre las cuatro: con telefono o email vacio quedaban
+  // \href{mailto:}{} y lineas \\\\ sueltas, y pdflatex aborta con
+  // "There's no line here to end" en vez de devolver el PDF.
+  const contactLines = [
+    p.telefono ? esc(p.telefono) : '',
+    p.email ? `\\href{mailto:${esc(p.email)}}{${esc(p.email)}}` : '',
+    p.github ? `\\href{${esc(p.github)}}{GitHub}` : '',
+    p.portafolio ? `\\href{${esc(p.portafolio)}}{Portafolio}` : ''
+  ].filter(Boolean).join(' \\\\\n');
+
   // Sin linea de perfil no se dibuja el bloque entero: ni titulo, ni cuerpo, ni
   // su vspace. Si se dejara el titulo solo, quedaria huerfano sobre un hueco.
   const perfilBlock = perfil ? `
@@ -545,10 +556,7 @@ function generateModerno(data) {
     \\vspace{4pt}
 
     {\\footnotesize
-      ${esc(p.telefono)}\\\\
-      \\href{mailto:${esc(p.email)}}{${esc(p.email)}}\\\\
-      ${p.github ? `\\href{${esc(p.github)}}{GitHub}` : ''}\\\\
-      ${p.portafolio ? `\\href{${esc(p.portafolio)}}{Portafolio}` : ''}
+      ${contactLines}
     }
   \\end{center}
 
@@ -568,7 +576,7 @@ function generateModerno(data) {
 \\begin{minipage}[t]{0.60\\textwidth}
   \\vspace{4mm}
 ${perfilBlock}
-  %% --- EXPERIENCIA ---
+${expLines ? `  %% --- EXPERIENCIA ---
   {\\small\\bfseries\\color{sidebar} EXPERIENCIA LABORAL}
   \\vspace{2pt}
 
@@ -576,16 +584,16 @@ ${perfilBlock}
   \\begin{tabularx}{\\textwidth}{@{} l X}
     ${expLines}
   \\end{tabularx}}
-  \\vspace{6pt}
+  \\vspace{6pt}` : ''}
 
-  %% --- EDUCACIÓN ---
+${eduLines ? `  %% --- EDUCACIÓN ---
   {\\small\\bfseries\\color{sidebar} FORMACIÓN Y CERTIFICACIONES}
   \\vspace{2pt}
 
   {\\footnotesize
   \\begin{itemize}
     ${eduLines}
-  \\end{itemize}}
+  \\end{itemize}}` : ''}
 
 \\end{minipage}
 
@@ -616,6 +624,16 @@ function generateCreativo(data) {
   const exp = getExperienceByArea(data, area);
   const skills = getSkillsByArea(data, area);
   const perfil = getPerfil(data, area);
+
+  // Contacto en una linea, solo con los campos que tienen contenido. Antes se
+  // emitian los cuatro separados por \quad | \quad: con email vacio salia
+  // \href{mailto:}{} y barras separadoras sueltas.
+  const contactInline2 = [
+    p.telefono ? esc(p.telefono) : '',
+    p.email ? `\\href{mailto:${esc(p.email)}}{${esc(p.email)}}` : '',
+    p.github ? `\\href{${esc(p.github)}}{GitHub}` : '',
+    p.portafolio ? `\\href{${esc(p.portafolio)}}{Portafolio}` : ''
+  ].filter(Boolean).join(' \\quad | \\quad ');
 
   // Sin linea de perfil no se abre la caja: una coloredbox vacia igual dibuja
   // marco, fondo y titulo, o sea un recuadro azul con "Perfil Profesional" y
@@ -738,10 +756,7 @@ function generateCreativo(data) {
   \\vspace{2pt}
 
   {\\footnotesize
-    ${esc(p.telefono)} \\quad | \\quad
-    \\href{mailto:${esc(p.email)}}{${esc(p.email)}} \\quad | \\quad
-    ${p.github ? `\\href{${esc(p.github)}}{GitHub}` : ''} \\quad | \\quad
-    ${p.portafolio ? `\\href{${esc(p.portafolio)}}{Portafolio}` : ''}
+    ${contactInline2}
   }
 \\end{center}
 
@@ -754,19 +769,19 @@ ${perfilBlock}
 
 \\vspace{6pt}
 
-%% --- EXPERIENCIA ---
+${expBlock ? `%% --- EXPERIENCIA ---
 {\\large\\bfseries\\color{primary} Experiencia Laboral}
 \\vspace{4pt}
 
-${expBlock}
+${expBlock}` : ''}
 
-%% --- EDUCACIÓN ---
+${eduBlock ? `%% --- EDUCACIÓN ---
 {\\large\\bfseries\\color{primary} Formación y Certificaciones}
 \\vspace{4pt}
 
 \\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
   ${eduBlock}
-\\end{itemize}
+\\end{itemize}` : ''}
 
 \\vfill
 
@@ -793,6 +808,16 @@ function generateClassico(data) {
   const exp = getExperienceByArea(data, area);
   const skills = getSkillsByArea(data, area);
   const perfil = getPerfil(data, area);
+
+  // Contacto en una linea, solo con los campos que tienen contenido. Antes se
+  // emitian los cuatro separados por \quad | \quad: con email vacio salia
+  // \href{mailto:}{} y barras separadoras sueltas.
+  const contactInline3 = [
+    p.telefono ? esc(p.telefono) : '',
+    p.email ? `\\href{mailto:${esc(p.email)}}{${esc(p.email)}}` : '',
+    p.github ? `\\href{${esc(p.github)}}{${esc(p.github)}}` : '',
+    p.portafolio ? `\\href{${esc(p.portafolio)}}{${esc(p.portafolio)}}` : ''
+  ].filter(Boolean).join(' \\quad | \\quad ');
 
   // Sin linea de perfil no se emite el \section: quedaria el titulo con su
   // \titlerule dibujados sobre un cuerpo vacio. Se omite el bloque entero.
@@ -906,30 +931,27 @@ ${fortalezasRows}\\end{itemize}
   \\vspace{2pt}
 
   {\\footnotesize
-    ${esc(p.telefono)} \\quad | \\quad
-    \\href{mailto:${esc(p.email)}}{${esc(p.email)}} \\quad | \\quad
-    ${p.github ? `\\href{${esc(p.github)}}{${esc(p.github)}}` : ''} \\quad | \\quad
-    ${p.portafolio ? `\\href{${esc(p.portafolio)}}{${esc(p.portafolio)}}` : ''}
+    ${contactInline3}
   }
 \\end{center}
 
 \\vspace{4pt}
 ${perfilBlock}
-%% --- HABILIDADES ---
+${skillRows ? `%% --- HABILIDADES ---
 \\section{Habilidades}
 \\begin{tabularx}{\\textwidth}{@{} r X}
-${skillRows}\\end{tabularx}
+${skillRows}\\end{tabularx}` : ''}
 
-%% --- EXPERIENCIA ---
+${expRows ? `%% --- EXPERIENCIA ---
 \\section{Experiencia Laboral}
 \\begin{tabularx}{\\textwidth}{@{} l X}
-${expRows}\\end{tabularx}
+${expRows}\\end{tabularx}` : ''}
 
-%% --- EDUCACIÓN ---
+${eduRows ? `%% --- EDUCACIÓN ---
 \\section{Formación y Certificaciones}
 \\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
   ${eduRows}
-\\end{itemize}
+\\end{itemize}` : ''}
 ${fortalezasBlock}
 \\vfill
 
