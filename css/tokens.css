@@ -1,0 +1,79 @@
+/* ============================================================
+   DESIGN TOKENS - Edicion dibujada a mano
+   Paleta, tipografia, sombras, bordes wobbly, texturas
+   ============================================================ */
+
+:root {
+  /* ---- Colores ---- */
+  --color-bg: #fdfbf7;           /* Warm Paper */
+  --color-fg: #2d2d2d;           /* Soft Pencil Black */
+  --color-muted: #e5e0d8;        /* Old Paper */
+  --color-accent: #ff4d4d;       /* Red Correction Marker */
+  --color-border: #2d2d2d;       /* Pencil Lead */
+  --color-secondary: #2d5da1;    /* Blue Ballpoint Pen */
+  --color-secondary-soft: #a8bfe0; /* Ballpoint claro: borde de pasos no visitados */
+  --color-white: #ffffff;
+  --color-postit: #fff9c4;       /* Post-it Yellow */
+  --color-tape: rgba(200, 200, 200, 0.55); /* Cinta adhesiva translucida */
+
+  /* ---- Tipografia ---- */
+  --font-heading: 'Kalam', cursive;
+  --font-body: 'Patrick Hand', cursive;
+
+  /* Escala de tamanos */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+
+  /* ---- Bordes wobbly ---- */
+  --wobbly: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --wobbly-sm: 155px 15px 125px 15px / 15px 125px 15px 155px;
+  --wobbly-lg: 355px 25px 325px 25px / 25px 325px 25px 355px;
+
+  /* ---- Sombras hard-offset (sin blur) ---- */
+  --shadow-sm: 2px 2px 0px 0px var(--color-fg);
+  --shadow-md: 4px 4px 0px 0px var(--color-fg);
+  --shadow-lg: 8px 8px 0px 0px var(--color-fg);
+  --shadow-hover: 2px 2px 0px 0px var(--color-fg);
+  --shadow-active: 0px 0px 0px 0px var(--color-fg);
+
+  /* ---- Textura papel: cuadricula tipo cuaderno ---- */
+  /* Dos gradientes superpuestos: verticales mas fuertes que horizontales,
+     igual que en una hoja cuadriculada real. Sin animacion: el fondo es
+     estatico a proposito para no repintar el viewport. */
+  --paper-cell: 28px;
+  --paper-texture:
+    repeating-linear-gradient(to right,  #ddd7cc 0 1px, transparent 1px var(--paper-cell)),
+    repeating-linear-gradient(to bottom, #efede8 0 1px, transparent 1px var(--paper-cell));
+  --paper-size: 28px 28px;
+
+  /* ---- Espaciado ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ---- Transiciones ---- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* ---- Z-Index ---- */
+  --z-base: 1;
+  --z-dropdown: 10;
+  --z-fab: 40;
+  --z-modal: 100;
+  --z-toast: 200;
+}

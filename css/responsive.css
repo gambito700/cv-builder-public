@@ -1,0 +1,227 @@
+/* ============================================================
+   RESPONSIVE - Media queries y adaptaciones mobile
+   ============================================================ */
+
+/* ---- Mobile (<768px): el rail colapsa a una PILL flotante pegada abajo ----
+   Por debajo de 768px no hay "lado": el rail deja de ser una columna fija a
+   la izquierda y pasa a ser una pill centrada abajo, con SOLO los numeros
+   circulados. Los botones Atras/Saltar/Siguiente viven aparte, en
+   .wizard-footer-cluster, fijo en la esquina inferior izquierda: siguen ahi
+   en columna, pero la pill se sube lo necesario para no pisarlos, porque a
+   390px la pill (336px) y el cluster (16..64px) se solaparian en el centro.
+   El body deja de reservar gutter lateral. */
+@media (max-width: 767px) {
+  body {
+    padding-left: 0;
+    /* Alto que ocupa el cluster flotante: 3 circulos de 48px + 2 gaps de 8px
+       + 16px de bottom. La pill y el padding-bottom del body se derivan de
+       aqui, asi que anadir un boton no rompe el reparto. */
+    --footer-cluster-h: 176px;
+  }
+
+  .wizard-rail {
+    position: fixed;
+    bottom: calc(var(--footer-cluster-h) + var(--space-2));
+    left: 50%;
+    top: auto;
+    right: auto;
+    width: auto;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.92);
+    border: 3px solid var(--color-border);
+    border-right: 3px solid var(--color-border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-fab);
+  }
+
+  /* Numeros en fila */
+  .step-indicator {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* Conectores horizontales. El selector --visited se incluye a proposito:
+     en wizard.css es una clase unica (misma especificidad que .step-connector),
+     asi que sin nombrarlo aqui el reset del borde izquierdo dependeria del
+     orden de carga de los CSS. */
+  .step-connector,
+  .step-connector--visited {
+    width: 18px;
+    height: 0;
+    border-left: 0;
+    border-top: 3px dashed var(--color-muted);
+  }
+
+  .step-connector--visited {
+    border-top-color: var(--color-secondary);
+    border-top-style: solid;
+  }
+
+  /* En movil el tooltip va ARRIBA del boton: a la derecha se saldria de
+     pantalla en el primero y el ultimo circulo. */
+  .step-tooltip {
+    left: 50%;
+    top: auto;
+    bottom: 100%;
+    margin-left: 0;
+    margin-bottom: var(--space-2);
+    transform: translateX(-50%);
+  }
+
+  /* El tooltip de los botones de navegacion SI va a la derecha (el cluster esta
+     a la izquierda de la pantalla), pero con tope de ancho para que jamas
+     pueda salirse del viewport. */
+  .nav-circle-tip {
+    max-width: 40vw;
+  }
+
+  /* El ultimo campo del paso no debe quedar bajo el cluster de botones ni
+     bajo la pill que ahora flota por encima de el. */
+  .wizard-body {
+    padding-bottom: calc(var(--footer-cluster-h) + var(--space-2));
+  }
+
+  /* El footer va fuera de .wizard-body, asi que necesita su propio margen
+     inferior: si no, sus botones quedan bajo la pill y el cluster. */
+  .site-footer {
+    padding-bottom: calc(var(--footer-cluster-h) + var(--space-4));
+  }
+}
+
+/* ---- Mobile: ocultar decoraciones ---- */
+@media (max-width: 639px) {
+  /* Ocultar decoraciones que solo funcionan en desktop */
+  .deco-desktop {
+    display: none !important;
+  }
+
+  /* Reducir tamanos de titulo */
+  .wizard-title {
+    font-size: var(--text-3xl);
+  }
+
+  h1 { font-size: var(--text-4xl); }
+  h2 { font-size: var(--text-3xl); }
+  h3 { font-size: var(--text-2xl); }
+
+  /* Cards: sin rotacion */
+  .rotate-neg-2,
+  .rotate-neg-1,
+  .rotate-1,
+  .rotate-2 {
+    transform: none;
+  }
+
+  /* Welcome cards: 1 columna */
+  .welcome-cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* Step indicator: mas pequeno */
+  .step-dot {
+    width: 36px;
+    height: 36px;
+    font-size: var(--text-sm);
+  }
+
+  /* Result cards: 1 columna */
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compile-options {
+    grid-template-columns: 1fr;
+  }
+
+  /* Modal: casi fullscreen */
+  .modal {
+    padding: var(--space-4);
+    max-height: 95vh;
+  }
+
+  /* Container padding reducido */
+  .container {
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+  }
+}
+
+/* ---- Desktop (>=768px): el body reserva el ancho del rail fijo ----
+   Es lo que impide que el PDF/preview del paso 5 quede debajo del rail.
+   El rail sigue siendo position:fixed (viewport), el padding lo compensa. */
+@media (min-width: 768px) {
+  body {
+    padding-left: var(--rail-w);
+  }
+}
+
+/* ---- Tablet (640px - 1023px) ---- */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .focus-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---- Desktop (1024px+) ---- */
+@media (min-width: 1024px) {
+  .welcome-greeting h2 {
+    font-size: var(--text-5xl);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Mostrar decoraciones en desktop */
+  .deco-desktop {
+    display: block;
+  }
+}
+
+/* ---- Impresion ---- */
+@media print {
+  .wizard-header,
+  .wizard-rail,
+  .wizard-footer-cluster,
+  .scroll-fab,
+  .step-tooltip,
+  .results-nav,
+  .site-footer,
+  .btn,
+  .toast-container {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    background-image: none;
+    padding-left: 0;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* ---- Accesibilidad: reducir movimiento ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

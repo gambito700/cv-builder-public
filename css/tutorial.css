@@ -1,0 +1,155 @@
+/* ============================================================
+   TUTORIAL - Guia de 2 pasos: que botones se pueden apretar
+   Aparece solo al cargar la pagina. No guarda nada en disco.
+   El foco va en el post-it; el resto de la pagina queda en
+   penumbra con un agujero sobre el elemento apuntado.
+   ============================================================ */
+
+/* ---- Halo: recorta la penumbra alrededor del elemento ----
+   pointer-events:none para que el clic ATRAVIESE el halo y
+   llegue al boton real. El hueco del medio es transparente,
+   asi que el elemento de verdad se ve a traves. */
+.tutorial-spotlight {
+  position: fixed;
+  z-index: 150;
+  pointer-events: none;
+  background: transparent;
+  border: 3px dashed var(--color-secondary);
+  border-radius: 18px 14px 20px 16px;
+  box-shadow: 0 0 0 9999px rgba(45, 45, 45, 0.62);
+  transition: top var(--transition-base), left var(--transition-base),
+              width var(--transition-base), height var(--transition-base);
+  animation: tutorial-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tutorial-pulse {
+  0%, 100% { border-color: var(--color-secondary); }
+  50%      { border-color: var(--color-accent); }
+}
+
+/* ---- Tarjeta: un post-it pegado al elemento apuntado ---- */
+.tutorial-card {
+  position: fixed;
+  z-index: 151;
+  width: min(320px, calc(100vw - 32px));
+  padding: var(--space-4);
+  background: var(--color-postit);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  border: 3px solid var(--color-border);
+  border-radius: var(--wobbly-sm);
+  box-shadow: var(--shadow-lg);
+  transform: rotate(-0.7deg);
+  pointer-events: auto;
+  animation: tutorial-pop 260ms ease;
+}
+
+@keyframes tutorial-pop {
+  from { opacity: 0; transform: rotate(-0.7deg) translateY(8px); }
+  to   { opacity: 1; transform: rotate(-0.7deg) translateY(0); }
+}
+
+.tutorial-card__count {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: var(--space-1);
+}
+
+.tutorial-card__title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 var(--space-2);
+}
+
+.tutorial-card__text {
+  font-size: var(--text-base);
+  line-height: 1.45;
+  margin: 0 0 var(--space-4);
+}
+
+/* Franja que dice "podes apretar aca" sobre el elemento apuntado */
+.tutorial-card__hint {
+  display: inline-block;
+  font-size: var(--text-sm);
+  background: var(--color-white);
+  border: 2px dashed var(--color-secondary);
+  border-radius: 12px 10px 12px 10px;
+  padding: 2px var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.tutorial-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tutorial-card__pips {
+  display: flex;
+  gap: 6px;
+}
+
+.tutorial-card__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+
+.tutorial-card__pip.is-active {
+  background: var(--color-secondary);
+  width: 18px;
+  border-radius: 999px;
+}
+
+.tutorial-card__skip {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-fg);
+  text-decoration: underline;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.tutorial-card__skip:hover { color: var(--color-secondary); }
+.tutorial-card__skip:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+
+/* Los botones reusan el estilo del proyecto (components.css) */
+.tutorial-card__next {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  padding: var(--space-2) var(--space-4);
+  min-height: 44px;
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border: 3px solid var(--color-border);
+  border-radius: 14px 12px 14px 12px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.tutorial-card__next:hover { background: var(--color-fg); }
+.tutorial-card__next:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-spotlight { animation: none; }
+  .tutorial-card { animation: none; }
+  .tutorial-spotlight,
+  .tutorial-card__next { transition: none; }
+}
+
+@media print {
+  .tutorial-spotlight,
+  .tutorial-card { display: none !important; }
+}

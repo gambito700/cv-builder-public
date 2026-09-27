@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Constructor de CV con diseño dibujado a mano. Genera tu currículum en formato LaTeX con 3 plantillas profesionales.">
+  <title>CV Builder -- Edición dibujada a mano</title>
+
+  <!-- Google Fonts: Kalam (headings) + Patrick Hand (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+  <!-- CSS: Tokens, Base, Components, Wizard, Results, Responsive, Carousel, Tutorial -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/wizard.css">
+  <link rel="stylesheet" href="css/results.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/carousel.css">
+  <link rel="stylesheet" href="css/tutorial.css">
+
+  <!-- Favicon (data URI simple) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>CV</text></svg>">
+</head>
+<body>
+
+  <!-- RAIL DE NAVEGACION
+       Fijo a la izquierda en desktop (>=768px): columna de numeros circulados
+       con tooltip al hover. Por debajo de 768px se convierte en una pill
+       flotante pegada abajo, solo con los numeros (ver css/responsive.css).
+       Contiene SOLO los 6 pasos (renderStepIndicator). Los botones de
+       navegacion NO viven aqui: son el hermano siguiente, .wizard-footer-cluster.
+       El body compensa el rail con padding-left (ver --rail-w). -->
+  <nav class="wizard-rail" id="wizard-rail" aria-label="Navegación del asistente">
+
+    <!-- Indicador de pasos: numeros clickeables -->
+    <div class="step-indicator" id="step-indicator">
+      <!-- Se renderiza via JS -->
+    </div>
+
+  </nav>
+
+  <!-- BOTONES DE NAVEGACION (Atras / Saltar / Siguiente)
+       Hermano del <nav> del rail y NO hijo de .wizard.container: asi salen del
+       flujo y quedan pegados a la esquina inferior izquierda al hacer scroll
+       (position:fixed), en forma de circulos de 48px con icono y tooltip a la
+       derecha. En movil (<768px) siguen abajo a la izquierda, junto a la
+       pill de numeros que ocupa el bottom-center (ver css/responsive.css).
+       Conserva el id #wizard-footer porque renderFooter() lo busca por id. -->
+  <div class="wizard-footer-cluster" id="wizard-footer" role="group" aria-label="Botones de avance, retroceso y salto">
+    <!-- Se renderiza via JS -->
+  </div>
+
+  <!-- Contenedor principal del wizard -->
+  <div class="wizard container">
+
+    <!-- Header: titulo del wizard -->
+    <header class="wizard-header">
+      <h1 class="wizard-title scribble-underline">
+        CV Builder
+      </h1>
+      <p style="font-size: var(--text-base); color: #888; margin-top: var(--space-1);">
+        Edición dibujada a mano
+      </p>
+    </header>
+
+    <!-- Indicador de pasos: vive en el rail lateral (#wizard-rail), no aqui -->
+
+    <!-- Botones de navegacion: viven en .wizard-footer-cluster, hermano del
+         rail y fuera de este contenedor (ver arriba). -->
+
+    <!-- Cuerpo del wizard: los 6 pasos -->
+    <main class="wizard-body" role="main">
+
+      <!-- Paso 0: Bienvenida -->
+      <section class="wizard-step" id="step-0" aria-label="Bienvenida">
+        <!-- Se renderiza via JS -->
+      </section>
+
+      <!-- Paso 1: Datos Personales -->
+      <section class="wizard-step" id="step-1" aria-label="Datos personales">
+        <!-- Se renderiza via JS -->
+      </section>
+
+      <!-- Paso 2: Area de Enfoque -->
+      <section class="wizard-step" id="step-2" aria-label="Área de enfoque">
+        <!-- Se renderiza via JS -->
+      </section>
+
+      <!-- Paso 3: Experiencia y Educacion -->
+      <section class="wizard-step" id="step-3" aria-label="Experiencia y educación">
+        <!-- Se renderiza via JS -->
+      </section>
+
+      <!-- Paso 4: Habilidades y Certificaciones -->
+      <section class="wizard-step" id="step-4" aria-label="Habilidades y certificaciones">
+        <!-- Se renderiza via JS -->
+      </section>
+
+      <!-- Paso 5: Resultados -->
+      <section class="wizard-step" id="step-5" aria-label="Resultados">
+        <!-- Se renderiza via JS -->
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- FOOTER con los enlaces publicos del proyecto
+       Vive FUERA de .wizard.container y de los .wizard-step: es hermano del
+       wizard, no un paso mas. Por eso esta en el DOM (y se ve al bajar) en los
+       6 pasos, y no solo en el primero. No es fixed a proposito: abajo a la
+       izquierda ya viven el cluster de botones y, en movil, la pill de pasos.
+       Solo identidad publica del proyecto: nada de email, nombre, RUT ni
+       telefono. Los dos <a> son reales (href, navegables con teclado) y abren
+       en pestana nueva con rel="noopener noreferrer". -->
+  <footer class="site-footer">
+    <div class="site-footer-inner container">
+      <p class="site-footer-text">
+        Hecho a mano por gambito700. El código es abierto y el portafolio también:
+      </p>
+      <div class="site-footer-links">
+        <a class="btn btn--sm" href="https://gambito700.github.io" target="_blank"
+           rel="noopener noreferrer">Ver mi portafolio</a>
+        <a class="btn btn--sm" href="https://github.com/gambito700/cv-builder-public" target="_blank"
+           rel="noopener noreferrer">Ver el código del CV Builder en GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal overlay (para ver codigo, instrucciones) -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Detalle">
+    <div class="modal" id="modal-content">
+      <!-- Contenido dinamico -->
+    </div>
+  </div>
+
+  <!-- Contenedor de toasts -->
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-relevant="additions">
+  </div>
+
+  <!-- Botones de scroll del paso actual (arriba / abajo).
+       Fixed a la derecha centrada verticalmente: la pill movil ocupa el
+       bottom-center y el toast el bottom-right, asi que aqui no se pisan. -->
+  <div class="scroll-fab" role="group" aria-label="Desplazar el paso actual">
+    <button type="button" class="scroll-fab-btn" onclick="wizard.scrollStep('up')"
+            aria-label="Ir al inicio del paso" title="Ir al inicio">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 19V5"></path>
+        <path d="M5 12l7-7 7 7"></path>
+      </svg>
+    </button>
+    <button type="button" class="scroll-fab-btn" onclick="wizard.scrollStep('down')"
+            aria-label="Ir al final del paso" title="Ir al final">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14"></path>
+        <path d="M19 12l-7 7-7-7"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- JavaScript: Data, Wizard, Carousel, App, Generator, Results, Tutorial -->
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="js/logger.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/wizard.js"></script>
+  <script src="js/carousel.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/pdfgen.js"></script>
+  <script src="js/results.js"></script>
+  <script src="js/tutorial.js"></script>
+
+</body>
+</html>

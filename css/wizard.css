@@ -1,0 +1,610 @@
+/* ============================================================
+   WIZARD - Layout del asistente multi-paso
+   ============================================================ */
+
+/* ---- Layout general del wizard ---- */
+body {
+  /* Ancho del rail de navegacion. El body lo compensa con padding-left
+     para que el contenido NUNCA quede debajo del rail. Como el rail ya no
+     tiene fondo ni borde, 88px alcanzan para la columna de circulos. */
+  --rail-w: 88px;
+}
+
+.wizard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-header {
+  text-align: center;
+  padding: var(--space-8) var(--space-4) var(--space-4);
+}
+
+.wizard-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-2);
+  position: relative;
+  display: inline-block;
+}
+
+/* ---- RAIL DE NAVEGACION (columna vertical, fijo a la izquierda) ----
+   Sin fondo ni borde: solo la columna de numeros circulados, como en el
+   diseno de referencia. Importante: overflow visible, porque los tooltips
+   se salen del rail hacia la derecha y un overflow-y:auto los recortaria.
+   En mobile (<768px) esto se convierte en una pill flotante abajo
+   (ver responsive.css). */
+.wizard-rail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: var(--space-6) 0;
+  overflow: visible;
+  background: transparent;
+  border-right: none;
+  box-shadow: none;
+  z-index: var(--z-fab);
+}
+
+/* ---- Indicador de pasos: columna vertical de numeros clickeables ---- */
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+/* Circulo de 36px. El borde ballpoint claro (--color-secondary-soft) marca
+   los pasos no visitados sin competir con el azul del paso activo. */
+.step-dot {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 3px solid var(--color-secondary-soft);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  transition: all 200ms ease;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* El paso actual esta deshabilitado: no se atenua, se ve igual de activo */
+.step-dot:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* Foco de teclado: rojo de corrector sobre papel, no compite con el azul activo */
+.step-dot:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.step-dot:not(:disabled):hover {
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-md);
+  transform: translate(-1px, -1px);
+}
+
+.step-dot--active {
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-md);
+  transform: scale(1.1);
+}
+
+.step-dot--visited {
+  background: var(--color-secondary-soft);
+  color: var(--color-fg);
+  border-color: var(--color-secondary-soft);
+}
+
+/* Conector vertical entre pasos */
+.step-connector {
+  width: 0;
+  height: 16px;
+  border-left: 3px dashed var(--color-muted);
+  flex-shrink: 0;
+}
+
+.step-connector--visited {
+  border-left-color: var(--color-secondary);
+  border-left-style: solid;
+}
+
+/* ---- TOOLTIP del numero de paso ----
+   Vive dentro del .step-dot (que es position:relative) y se despliega a la
+   derecha. aria-hidden en el HTML: el nombre ya lo dan title y aria-label. */
+.step-tooltip {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: var(--space-3);
+  transform: translateY(-50%);
+  background: var(--color-fg);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--wobbly-sm);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: 1;
+}
+
+.step-dot:hover .step-tooltip,
+.step-dot:focus-visible .step-tooltip {
+  opacity: 1;
+}
+
+/* Pantallas grandes: circulo un poco mas grande, la columna respira */
+@media (min-width: 1024px) {
+  .step-dot {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ---- CLUSTER DE BOTONES (Atras / Saltar / Siguiente) ----
+   Hermano del .wizard-rail y fuera de .wizard.container: al ser
+   position:fixed queda anclado a la esquina inferior izquierda y sigue al
+   scroll, asi que nunca se pierde. Los botones son circulos de 48px con icono
+   SVG y tooltip a la derecha, apilados en columna.
+   Importante: overflow visible, porque el tooltip se sale del circulo.
+   En desktop no invade el contenido: ocupa de 16px a 64px y el body ya
+   reserva --rail-w (88px) de padding-left. En <768px se ajusta el alto de la
+   zona flotante en responsive.css (--footer-cluster-h). */
+.wizard-footer-cluster {
+  position: fixed;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  z-index: var(--z-fab);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  overflow: visible;
+}
+
+.nav-circle {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  border: 3px solid var(--color-border);
+  color: var(--color-fg);
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all 200ms ease;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.nav-circle svg {
+  display: block;
+}
+
+/* El primario (Siguiente) es el relleno azul ballpoint */
+.nav-circle--primary {
+  background: var(--color-secondary);
+  color: var(--color-white);
+  border-color: var(--color-secondary);
+}
+
+.nav-circle:not(:disabled):hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.nav-circle:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* ---- TOOLTIP del boton de navegacion ----
+   Mismas reglas que .step-tooltip, pero aplicado a .nav-circle. Se despliega a
+   la derecha. aria-hidden en el HTML: el nombre ya lo dan title y aria-label. */
+.nav-circle-tip {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: var(--space-3);
+  transform: translateY(-50%);
+  background: var(--color-fg);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  white-space: nowrap;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--wobbly-sm);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: 1;
+}
+
+.nav-circle:hover .nav-circle-tip,
+.nav-circle:focus-visible .nav-circle-tip {
+  opacity: 1;
+}
+
+/* ---- BOTONES FLOTANTES DE SCROLL (FAB) ----
+   Fija a la derecha centrada verticalmente: el toast vive en bottom-right y
+   la pill movil en bottom-center, asi que aqui no se solapan. */
+.scroll-fab {
+  position: fixed;
+  right: var(--space-4);
+  top: 85%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: var(--z-fab);
+}
+
+.scroll-fab-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  color: var(--color-fg);
+  border: 3px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+@media (min-width: 640px) {
+  .scroll-fab-btn {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Cada boton se separa en la direccion hacia la que apunta */
+.scroll-fab-btn:first-child:hover,
+.scroll-fab-btn:last-child:hover {
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+.scroll-fab-btn:first-child:hover {
+  transform: translateY(-3px);
+}
+
+.scroll-fab-btn:last-child:hover {
+  transform: translateY(3px);
+}
+
+.scroll-fab-btn:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* ---- Contenido del paso ---- */
+.wizard-body {
+  flex: 1;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.wizard-step {
+  display: none;
+  animation: fadeSlideIn 0.4s ease;
+}
+
+.wizard-step.active {
+  display: block;
+}
+
+/* El foco de teclado se mueve al paso tras navegar; no debe dibujar anillo */
+.wizard-step:focus {
+  outline: none;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Paso 0: Welcome ---- */
+.welcome-greeting {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.welcome-greeting h2 {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-4);
+}
+
+.welcome-greeting p {
+  font-size: var(--text-xl);
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  max-width: 48rem;
+  margin: 0 auto var(--space-8);
+}
+
+@media (min-width: 640px) {
+  .welcome-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.welcome-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.welcome-card-icon {
+  font-size: var(--text-3xl);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.welcome-card-text h4 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-1);
+}
+
+.welcome-card-text p {
+  font-size: var(--text-base);
+  color: #666;
+  margin-bottom: 0;
+}
+
+/* ---- Paso 2: Focus Area ---- */
+.focus-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .focus-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .focus-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .focus-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.focus-card {
+  cursor: pointer;
+  text-align: center;
+  padding: var(--space-5);
+  transition: all var(--transition-fast);
+}
+
+.focus-card:hover {
+  transform: translateY(-3px);
+}
+
+.focus-card.selected {
+  border-color: var(--color-secondary);
+  border-width: 4px;
+  box-shadow: 6px 6px 0px 0px var(--color-secondary);
+  background: #f0f4ff;
+}
+
+.focus-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-3);
+  display: block;
+}
+
+.focus-card-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+.focus-card-desc {
+  font-size: var(--text-sm);
+  color: #666;
+}
+
+.focus-card-check {
+  display: none;
+  margin-top: var(--space-2);
+}
+
+.focus-card.selected .focus-card-check {
+  display: block;
+  color: var(--color-secondary);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+/* ---- Paso 3 y 4: Entradas dinamicas ---- */
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.entry-item {
+  padding: var(--space-5);
+  position: relative;
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.entry-number {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.entry-remove {
+  background: none;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.entry-remove:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+.add-entry-btn {
+  width: 100%;
+  margin-top: var(--space-4);
+  border-style: dashed;
+  background: transparent;
+}
+
+.add-entry-btn:hover {
+  border-style: solid;
+}
+
+/* ---- Skills por categoria ---- */
+.skill-category {
+  margin-bottom: var(--space-6);
+}
+
+.skill-category-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-3);
+  color: var(--color-secondary);
+}
+
+.skill-input-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.skill-input-row .form-input {
+  flex: 1;
+}
+
+.skill-input-row .btn {
+  flex-shrink: 0;
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: 36px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--wobbly-sm);
+  background: var(--color-white);
+}
+
+.skill-tag-remove {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-left: var(--space-1);
+  background: none;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+}
+
+.skill-tag-remove:hover {
+  color: var(--color-white);
+  background: var(--color-accent);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

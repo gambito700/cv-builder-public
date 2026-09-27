@@ -1,0 +1,220 @@
+/* ============================================================
+   CAROUSEL - Carrusel de imagenes de ejemplo del paso 0
+   Estilo "cuaderno": foto pegada con cinta, marco blanco con sombra dura,
+  caption sobre gradiente y puntos de boligrafo. Todo con los tokens de
+   css/tokens.css, sin sombras suaves ni paddings inventados.
+   ============================================================ */
+
+.example-carousel {
+  margin-top: var(--space-8);
+}
+
+/* El contenedor es focusable (tabindex="0") para poder navegar con flechas */
+.example-carousel:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Ancho del carrusel y ancla de la cinta */
+.example-carousel__inner {
+  position: relative;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* Cinta adhesiva que pega la foto a la hoja */
+.example-carousel__tape {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 128px;
+  height: 30px;
+  background: var(--color-tape);
+  border: 1px solid rgba(180, 180, 180, 0.4);
+  border-radius: 2px;
+  z-index: 2;
+}
+
+/* La foto: marco blanco, ligeramente inclinada, sombra dura de 8px */
+.example-carousel__frame {
+  position: relative;
+  transform: rotate(-1.2deg);
+  background: var(--color-white);
+  border: 4px solid var(--color-white);
+  border-radius: var(--wobbly-sm);
+  padding: 8px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Ventana 16:9 que recorta las fotos */
+.example-carousel__viewport {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--wobbly-sm);
+  background: var(--color-muted);
+}
+
+/* Cada slide es la propia <img>: se apila sobre la anterior y hace el crossfade */
+.example-carousel__slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  z-index: 0;
+}
+
+.example-carousel__slide.is-active {
+  opacity: 1;
+}
+
+/* Slide sin imagen (offline o 404): se oculta para que no salga el icono roto */
+.example-carousel__slide--roto {
+  display: none;
+}
+
+/* Caption sobre gradiente, abajo. aria-live="polite" lo announce al cambiar */
+.example-carousel__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  line-height: 1.3;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Marcador de papel cuando la imagen no carga (sin internet) */
+.example-carousel__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 3px dashed var(--color-border);
+  color: var(--color-fg);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  text-align: center;
+  z-index: 1;
+}
+
+.example-carousel__fallback[hidden] {
+  display: none;
+}
+
+/* Flechas: circulo de 36px sobre la foto */
+.example-carousel__arrow {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-fg);
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  line-height: 1;
+  transition: all 200ms ease;
+  z-index: 1;
+}
+
+.example-carousel__arrow:hover {
+  background: var(--color-white);
+}
+
+.example-carousel__arrow--next {
+  right: 8px;
+  left: auto;
+}
+
+.example-carousel__arrow:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Puntos de navegacion */
+.example-carousel__dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.example-carousel__dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-secondary-soft);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+/* Area de click de ~30px sin agrandar el punto visible */
+.example-carousel__dot::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
+.example-carousel__dot.is-active {
+  width: 26px;
+  border-radius: 999px;
+  background: var(--color-secondary);
+}
+
+.example-carousel__dot:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Impresion: el carrusel es decorativo, no se imprime ---- */
+@media print {
+  .example-carousel {
+    display: none;
+  }
+}
+
+/* ---- Mobile (<768px): caption mas chico y cinta mas chica ---- */
+@media (max-width: 767px) {
+  .example-carousel__caption {
+    font-size: var(--text-base);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .example-carousel__tape {
+    top: -10px;
+    width: 96px;
+    height: 24px;
+  }
+}

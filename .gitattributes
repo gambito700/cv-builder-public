@@ -1,0 +1,16 @@
+# Forzar LF en archivos de texto: evita que Git los convierte a CRLF en Windows
+# y rompe el HTML/CSS/JS al servirlo en GitHub Pages.
+* text=auto eol=lf
+
+# Binarios: nunca tocar
+*.jpg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.woff2 binary
+*.pdf binary
+
+# Vendor: librerias de terceros versionadas tal cual, byte a byte.
+# -text anula el text=auto de arriba para estos .js, de modo que Git no
+# normalice finales de linea ni altere el artefacto que sirve GitHub Pages.
+vendor/*.js -text
