@@ -634,6 +634,15 @@ function apiMensajeError(err) {
   if (codigo === 'API_TIMEOUT') {
     return 'El servidor tardó más de 90 segundos y se cortó la espera. Pasa cuando el primer intento carga el servidor frío: reintenta una vez. ' + local;
   }
+  /* La API incluye en `latex_error` el motivo real del fallo (resumen sano de
+     la linea `! ...` del log de LaTeX). Si vino, se muestra: es accionable y
+     evita el "suele ser un caracter" que no dice nada. La rama original queda
+     como respaldo para cuando la API no antique ese campo. */
+  var latex = String((err && err.latexError) || '').trim();
+  if (codigo === 'API_COMPILACION' && latex) {
+    return 'El servidor no pudo compilar este LaTeX. Detalle de LaTeX: '
+      + latex + ' ' + local;
+  }
   if (codigo === 'API_COMPILACION') {
     return 'El servidor no pudo compilar este LaTeX. Suele ser un carácter que pdflatex no acepta: usa "Descargar .tex" para ver el código. ' + local;
   }

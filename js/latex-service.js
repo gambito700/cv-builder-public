@@ -165,12 +165,16 @@ function apiConfigurada() {
  *                          | API_HTTP | API_RED
  * @param {string} mensaje  detalle tecnico, para el log (NO para el usuario)
  * @param {number} [estado] status HTTP, si lo hubo
+ * @param {string} [latexError]  resumen SANEADO de la linea `! ...` del log de
+ *   LaTeX que devuelve la API en `latex_error` (app.py). Es el motivo real del
+ *   fallo, ya sin rutas absolutas; se muestra al usuario.
  * @returns {Error}
  */
-function cvApiError(codigo, mensaje, estado) {
+function cvApiError(codigo, mensaje, estado, latexError) {
   var e = new Error(mensaje || codigo);
   e.codigoApi = codigo;
   if (typeof estado === 'number') e.estado = estado;
+  if (latexError) e.latexError = latexError;
   return e;
 }
 
@@ -336,6 +340,7 @@ async function compilarLatex(texString, template) {
 
   if (!res.ok) {
     var cuerpoMsg = null;
+    var latexError = null;
     var esJson = false;
     try {
       var cuerpo = await res.json();
@@ -343,13 +348,21 @@ async function compilarLatex(texString, template) {
         cuerpoMsg = cuerpo.error;
         esJson = true;
       }
+      /* `latex_error` es el resumen que la API arma de las lineas `! ...` del
+         log de LaTeX, con las rutas ya sustituidas por <ruta> y con tope de
+         longitud. Sin el, un 422 no decia nada util: solo "La compilacion
+         fallo". El log COMPLETO no sale del servidor, solo este trozo. */
+      if (cuerpo && typeof cuerpo.latex_error === 'string' && cuerpo.latex_error) {
+        latexError = cuerpo.latex_error;
+      }
     } catch (_e) {
       /* No es JSON. Casi siempre es la pagina de error del gateway. */
       esJson = false;
     }
     var codigo = cvApiCodigoDesdeEstado(res.status, cuerpoMsg, esJson);
     throw cvApiError(codigo,
-      'HTTP ' + res.status + (cuerpoMsg ? ': ' + cuerpoMsg : ''), res.status);
+      'HTTP ' + res.status + (cuerpoMsg ? ': ' + cuerpoMsg : ''), res.status,
+      latexError);
   }
 
   /* Firma de PDF: si lo que volvio no empieza con %PDF-, no es un PDF. Pasa
