@@ -10,3 +10,9 @@ Thumbs.db
 vault/
 CONTINUACION.md
 .vscode/
+
+# Herramientas de desarrollo: no son parte del programa final
+# harness de QA y generador de previews: proceso, no producto
+tools/
+# servidor local de desarrollo: proceso, no producto
+dev-server.py

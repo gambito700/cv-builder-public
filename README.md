@@ -133,14 +133,14 @@ pierde items. Un item que no cabe ni en una pagina entera se parte por lineas.
 
 El conteo de páginas no se puede sacar de la app por sí sola, porque el
 asistente arranca en blanco. La medición sale del banco de pruebas: el fixture
-`real` de `tools/qa-pdf.js`, que es un CV denso con 13 experiencias, 14
+`real` del banco de pruebas, que es un CV denso con 13 experiencias, 14
 educaciones, 13 certificaciones y 7 proyectos, o sea 47 items, más 5 categorías
 de habilidades con 30 habilidades y 2 idiomas. Con ese CV la 1 da 5 páginas, la
 2 da 5 y la 3 da 6.
 
 ## Estado de la verificación del PDF
 
-Hay un banco de pruebas: `node tools/qa-pdf.js`. Genera los PDF de 10 fixtures
+El banco de pruebas es una herramienta local y no se publica. Genera los PDF de 10 fixtures
 en las 3 plantillas, los somete a Poppler (`pdftotext`, `pdftoppm`) y comprueba
 un catalogo de invariantes: coordenadas de cada palabra contra la caja util,
 orden de lectura, cobertura de estilos, densidad, conteo de items, acentos y
@@ -247,15 +247,12 @@ valores ni el texto del mensaje.
 
 ```
 index.html
-dev-server.py
 css/         8 hojas: tokens, base, components, wizard, results,
              responsive, carousel, tutorial
 js/          logger, data, wizard, carousel, app, generator, pdfgen,
              results, tutorial
 assets/      examples/ (carrusel), previews/
 vendor/      jspdf.umd.min.js 4.2.1  (MIT, 410.3 KiB, -text en .gitattributes)
-tools/       generar-previews.js  (uso interno, requiere MiKTeX)
-             qa-pdf.js           (banco de pruebas del PDF, requiere Poppler)
 ```
 
 No hay `assets/fonts/`. Las tipografias del PDF son las estandar de PDF
