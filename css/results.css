@@ -226,6 +226,21 @@
   box-shadow: none;
 }
 
+/* Boton que sigue siendo enfocable (WCAG 2.2: aria-disabled, no disabled)
+   para que el teclado lo alcance y la technology assistiva lea la nota que
+   explica por que no se puede usar, pero tiene que PARECER no disponible.
+   Sin esto se ve disponible, se pulsa y responde con un error. */
+.btn--pdf[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn--pdf[aria-disabled='true']:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 /* Loading state for PDF buttons */
 .btn--loading {
   pointer-events: none;
